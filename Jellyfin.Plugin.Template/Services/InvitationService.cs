@@ -87,6 +87,6 @@ public sealed class InvitationService
         // 16 bytes random -> base64url without padding
         var bytes = RandomNumberGenerator.GetBytes(16);
         var b64 = Convert.ToBase64String(bytes);
-        return b64.Replace("+", "-").Replace("/", "_").TrimEnd('=');
+        return b64.Replace("+", "-", StringComparison.Ordinal).Replace("/", "_", StringComparison.Ordinal).TrimEnd('=');
     }
 }

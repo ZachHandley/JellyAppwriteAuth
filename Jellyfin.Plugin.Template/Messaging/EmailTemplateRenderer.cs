@@ -17,7 +17,7 @@ public static class EmailTemplateRenderer
     {
         var primaryColor = string.IsNullOrWhiteSpace(cfg.BrandPrimaryColor) ? "#6C63FF" : cfg.BrandPrimaryColor.Trim();
         var brandName = string.IsNullOrWhiteSpace(cfg.BrandName) ? "Jellyfin" : cfg.BrandName.Trim();
-        var loginUrl = string.IsNullOrWhiteSpace(cfg.LoginUrl) ? "" : cfg.LoginUrl.Trim();
+        var loginUrl = string.IsNullOrWhiteSpace(cfg.LoginUrl) ? string.Empty : cfg.LoginUrl.Trim();
 
         string logoRef = cfg.LogoUrlOrPath?.Trim() ?? string.Empty;
         EmailAttachment? inlineLogo = null;
@@ -56,10 +56,10 @@ public static class EmailTemplateRenderer
     {
         // Minimal HTML attribute/content escape
         return value
-            .Replace("&", "&amp;")
-            .Replace("<", "&lt;")
-            .Replace(">", "&gt;")
-            .Replace("\"", "&quot;");
+            .Replace("&", "&amp;", StringComparison.Ordinal)
+            .Replace("<", "&lt;", StringComparison.Ordinal)
+            .Replace(">", "&gt;", StringComparison.Ordinal)
+            .Replace("\"", "&quot;", StringComparison.Ordinal);
     }
 
     private static string GuessMediaType(string path)

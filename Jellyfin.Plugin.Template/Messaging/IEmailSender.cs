@@ -18,6 +18,8 @@ public sealed class EmailAttachment
     }
 
     public string ContentId { get; }
+
     public string MediaType { get; }
+
     public System.ReadOnlyMemory<byte> Bytes { get; }
 }

@@ -1,123 +1,72 @@
-# So you want to make a Jellyfin plugin
+AppwriteAuth for Jellyfin
+=========================
 
-Awesome! This guide is for you. Jellyfin plugins are written using the dotnet standard framework. What that means is you can write them in any language that implements the CLI or the DLI and can compile to net8.0. The examples on this page are in C# because that is what most of Jellyfin is written in, but F#, Visual Basic, and IronPython should all be compatible once compiled.
+AppwriteAuth is a lightweight authentication plugin for Jellyfin that delegates login to Appwrite while keeping all Jellyfin URLs and UI unchanged. It also provides admin tools to invite users and reset passwords via Appwrite Messaging (or SMTP fallback), with clean, branded HTML emails.
 
-## 0. Things you need to get started
+Author: Zach Handley (Black Leaf Digital) — zach@blackleafdigital.com
 
-- [Dotnet SDK 8.0](https://dotnet.microsoft.com/download)
+Features
 
-- An editor of your choice. Some free choices are:
+- Appwrite-backed login (email or username) with immediate Appwrite session deletion.
+- Jellyfin user name mirrors login input: email-login → email, username-login → username.
+- Optional “mark email verified on login” (Users.UpdateEmailVerification).
+- Admin Actions in plugin page: Send Invite, Send Reset, Send Test.
+- Appwrite Messaging: ensures a single SMTP provider ($id = jellyfin_smtp) from your settings, then sends HTML emails. Fallback to SMTP if needed.
+- Branding: logo (URL or local path), primary color, brand name, login URL, and fully editable HTML templates.
 
-   [Visual Studio Code](https://code.visualstudio.com)
+Requirements
 
-   [Visual Studio Community Edition](https://visualstudio.microsoft.com/downloads)
+- Jellyfin 10.9.x
+- Appwrite Endpoint and Project ID
+- Appwrite API Key (required for Messaging + user create/reset + username-login email resolution)
+- SMTP credentials (used to back the Appwrite Messaging SMTP provider and as fallback)
 
-   [Mono Develop](https://www.monodevelop.com)
+Install (Repository)
 
-## 0.5. Quickstarts
+1) In Jellyfin, go to: Dashboard → Plugins → Repositories → Add
+2) Enter: https://zachhandley.github.io/JellyAppwriteAuth/manifest.json
+3) Save. Then navigate to Plugins → Catalog and install “AppwriteAuth”.
 
-We have a number of quickstart options available to speed you along the way.
+Install (Manual)
 
-- [Download the Example Plugin Project](https://github.com/jellyfin/jellyfin-plugin-template/tree/master/Jellyfin.Plugin.Template) from this repository, open it in your IDE and go to [step 3](https://github.com/jellyfin/jellyfin-plugin-template#3-customize-plugin-information)
+1) Build and publish: `dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o publish/`
+2) Copy contents of `publish/` to your Jellyfin plugins directory, e.g. `/var/lib/jellyfin/plugins/AppwriteAuth/`
+3) Restart Jellyfin.
 
-- Install our dotnet template by [downloading the dotnet-template/content folder from this repo](https://github.com/jellyfin/jellyfin-plugin-template/tree/master/dotnet-template/content) or off of Nuget (Coming soon)
+Configure
 
-   ```
-   dotnet new -i /path/to/templatefolder
-   ```
+- Appwrite: Endpoint, Project ID, API Key
+- Email Provider: Appwrite Messaging (default) or SMTP
+- SMTP: Host, Port, Username, Password, From, SSL
+- Branding: Brand Name, Logo URL or Server Path (default: https://appwrite.io/logo.svg), Primary Color, Login URL
+- Templates: Invite/Reset HTML + Subjects
+- Option: Mark Appwrite email verified on successful login
 
-- Run this command then skip to step 4
+Admin Actions
 
-   ```
-      dotnet new Jellyfin-plugin -name MyPlugin
-   ```
+- Test Email: Validate configuration and templates (creates provider jellyfin_smtp if missing).
+- Invite Email: Creates the user (best-effort) and sends a branded invitation.
+- Reset Password Email: Updates password (best-effort) and sends a branded reset email.
 
-If you'd rather start from scratch keep going on to step one. This assumes no specific editor or IDE and requires only the command line with dotnet in the path.
+How It Works
 
-## 1. Initialize Your Project
+- Login: We validate via Appwrite (CreateEmailPasswordSession) and immediately delete the Appwrite session; Jellyfin manages the user session.
+- User mapping: On first login, we create/find a local Jellyfin user using the login input (email or username) as the Jellyfin Name.
+- Messaging: We ensure or create an SMTP provider in Appwrite with id jellyfin_smtp from your SMTP settings, then send HTML emails through Messaging; fallback to local SMTP if Messaging fails.
 
-Make a new dotnet standard project with the following command, it will make a directory for itself.
+Build
 
-```
-dotnet new classlib -f net8.0 -n MyJellyfinPlugin
-```
+- `dotnet build Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release`
+- For release packaging, see `.github/workflows/publish.yml` (publishes ZIP + manifest.json to GitHub Pages).
 
-Now add the Jellyfin shared libraries.
+Support / Contact
 
-```
-dotnet add package Jellyfin.Model
-dotnet add package Jellyfin.Controller
-```
+- Zach Handley — zach@blackleafdigital.com
+- Issues and PRs welcome.
 
-You have an autogenerated Class1.cs file. You won't be needing this, so go ahead and delete it.
+License
 
-## 2. Set Up the Basics
-
-There are a few mandatory classes you'll need for a plugin so we need to make them.
-
-### PluginConfiguration
-
-You can call it whatever you'd like really. This class is used to hold settings your plugin might need. We can leave it empty for now. This class should inherit from `MediaBrowser.Model.Plugins.BasePluginConfiguration`
-
-### Plugin
-
-This is the main class for your plugin. It will define your name, version and Id. It should inherit from `MediaBrowser.Common.Plugins.BasePlugin<PluginConfiguration>`
-
-Note: If you called your PluginConfiguration class something different, you need to put that between the <>
-
-### Implement Required Properties
-
-The Plugin class needs a few properties implemented before it can work correctly.
-
-It needs an override on ID, an override on Name, and a constructor that follows a specific model. To get started you can use the following section.
-
-```c#
-public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer){}
-public override string Name => throw new System.NotImplementedException();
-public override Guid Id => Guid.Parse("");
-```
-
-## 3. Customize Plugin Information
-
-You need to populate some of your plugin's information. Go ahead a put in a string of the Name you've overridden name, and generate a GUID
-
-- **Windows Users**: you can use the Powershell command `New-Guid`, `[guid]::NewGuid()` or the Visual Studio GUID generator
-
-- **Linux and OS X Users**: you can use the Powershell Core command `New-Guid` or this command from your shell of choice:
-
-   ```bash
-   od -x /dev/urandom | head -n1 | awk '{OFS="-"; srand($6); sub(/./,"4",$5); sub(/./,substr("89ab",1+rand()*4,1),$6); print $2$3,$4,$5,$6,$7$8$9}'
-   ```
-
-or
-
-   ```bash
-   uuidgen
-   ```
-
-- Place that guid inside the `Guid.Parse("")` quotes to define your plugin's ID.
-
-## 4. Adding Functionality
-
-Congratulations, you now have everything you need for a perfectly functional functionless Jellyfin plugin! You can try it out right now if you'd like by compiling it, then placing the dll you generate in a subfolder (named after your plugin for example) within the plugins folder under your Jellyfin config directory. If you want to try and hook it up to a debugger make sure you copy the generated PDB file alongside it.
-
-Most people aren't satisfied with just having an entry in a menu for their plugin, most people want to have some functionality, so lets look at how to add it.
-
-### 4a. Implement Interfaces
-
-If the functionality you are trying to add is functionality related to something that Jellyfin has an interface for you're in luck. Jellyfin uses some automatic discovery and injection to allow any interfaces you implement in your plugin to be available in Jellyfin.
-
-Here's some interfaces you could implement for common use cases:
-
-- **IAuthenticationProvider** - Allows you to add an authentication provider that can authenticate a user based on a name and a password, but that doesn't expect to deal with local users.
-- **IBaseItemComparer** - Allows you to add sorting rules for dealing with media that will show up in sort menus
-- **IIntroProvider** - Allows you to play a piece of media before another piece of media (i.e. a trailer before a movie, or a network bumper before an episode of a show)
-- **IItemResolver** - Allows you to define custom media types
-- **ILibraryPostScanTask** - Allows you to define a task that fires after scanning a library
-- **IMetadataSaver** - Allows you to define a metadata standard that Jellyfin can use to write metadata
-- **IResolverIgnoreRule** - Allows you to define subpaths that are ignored by media resolvers for use with another function (i.e. you wanted to have a theme song for each tv series stored in a subfolder that could be accessed by your plugin for playback in a menu).
-- **IScheduledTask** - Allows you to create a scheduled task that will appear in the scheduled task lists on the dashboard.
-
+- Based on the Jellyfin plugin template and follows its licensing model. See LICENSE.
 There are loads of other interfaces that can be used, but you'll need to poke around the API to get some info. If you're an expert on a particular interface, you should help [contribute some documentation](https://docs.jellyfin.org/general/contributing/index.html)!
 
 ### 4b. Use plugin aimed interfaces to add custom functionality

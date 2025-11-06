@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.Template.Configuration;
-using Jellyfin.Plugin.Template.Appwrite;
 using Appwrite;
-using Appwrite.Services;
 using Appwrite.Enums;
+using Appwrite.Services;
+using Jellyfin.Plugin.Template.Appwrite;
+using Jellyfin.Plugin.Template.Configuration;
 
 namespace Jellyfin.Plugin.Template.Messaging;
 
@@ -16,10 +16,9 @@ namespace Jellyfin.Plugin.Template.Messaging;
 /// </summary>
 public sealed class MessagingEmailSender : IEmailSender
 {
+    private const string ProviderId = "jellyfin_smtp";
     private readonly PluginConfiguration _config;
     private readonly SmtpEmailSender _fallback;
-
-    private const string ProviderId = "jellyfin_smtp";
 
     public MessagingEmailSender(PluginConfiguration config)
     {
@@ -54,8 +53,7 @@ public sealed class MessagingEmailSender : IEmailSender
                 attachments: null,
                 draft: null,
                 html: true,
-                scheduledAt: null
-            ).ConfigureAwait(false);
+                scheduledAt: null).ConfigureAwait(false);
 
             return;
         }
@@ -91,8 +89,7 @@ public sealed class MessagingEmailSender : IEmailSender
                 fromEmail: _config.SmtpFrom,
                 replyToName: string.Empty,
                 replyToEmail: string.Empty,
-                enabled: true
-            ).ConfigureAwait(false);
+                enabled: true).ConfigureAwait(false);
 #pragma warning restore CS0618
         }
     }
@@ -110,7 +107,10 @@ public sealed class MessagingEmailSender : IEmailSender
         {
             var list = await usersSvc.List(search: email).ConfigureAwait(false);
             var existing = list.Users?.Find(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
-            if (existing != null) return existing.Id;
+            if (existing != null)
+            {
+                return existing.Id;
+            }
         }
         catch
         {

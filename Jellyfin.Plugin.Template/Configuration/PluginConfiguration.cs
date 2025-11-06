@@ -3,6 +3,15 @@ using MediaBrowser.Model.Plugins;
 namespace Jellyfin.Plugin.Template.Configuration;
 
 /// <summary>
+/// Email sender provider type.
+/// </summary>
+public enum EmailProviderType
+{
+    Smtp,
+    AppwriteMessaging
+}
+
+/// <summary>
 /// Plugin configuration for AppwriteAuth.
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
@@ -25,7 +34,7 @@ public class PluginConfiguration : BasePluginConfiguration
         SmtpEnableSsl = true;
 
         BrandName = "Jellyfin";
-        LogoUrlOrPath = string.Empty;
+        LogoUrlOrPath = "https://appwrite.io/logo.svg";
         BrandPrimaryColor = "#6C63FF";
         LoginUrl = string.Empty;
 
@@ -54,97 +63,89 @@ public class PluginConfiguration : BasePluginConfiguration
     public string? AppwriteApiKey { get; set; }
 
     /// <summary>
-    /// Which email provider to use for sending invites/reset emails.
+    /// Gets or sets which email provider to use for sending invites and reset emails.
     /// </summary>
     public EmailProviderType EmailProvider { get; set; }
 
     /// <summary>
-    /// SMTP host for email sending (used when EmailProvider == Smtp).
+    /// Gets or sets the SMTP host for email sending (used when <see cref="EmailProvider"/> is <see cref="EmailProviderType.Smtp"/>).
     /// </summary>
     public string SmtpHost { get; set; }
 
     /// <summary>
-    /// SMTP port for email sending (default 587).
+    /// Gets or sets the SMTP port for email sending (default 587).
     /// </summary>
     public int SmtpPort { get; set; }
 
     /// <summary>
-    /// SMTP username.
+    /// Gets or sets the SMTP username.
     /// </summary>
     public string SmtpUsername { get; set; }
 
     /// <summary>
-    /// SMTP password.
+    /// Gets or sets the SMTP password.
     /// </summary>
     public string SmtpPassword { get; set; }
 
     /// <summary>
-    /// From address for emails.
+    /// Gets or sets the from address for emails.
     /// </summary>
     public string SmtpFrom { get; set; }
 
     /// <summary>
-    /// Enable SSL/TLS for SMTP.
+    /// Gets or sets a value indicating whether SSL/TLS is enabled for SMTP.
     /// </summary>
     public bool SmtpEnableSsl { get; set; }
 
-    /// <summary>
     /// <summary>
     /// Gets or sets the brand name used in email templates.
     /// </summary>
     public string BrandName { get; set; }
 
     /// <summary>
-    /// <summary>
     /// Gets or sets the logo URL or server path used in email templates.
     /// </summary>
     public string LogoUrlOrPath { get; set; }
 
-    /// <summary>
     /// <summary>
     /// Gets or sets the primary brand color in HEX (e.g. #6C63FF).
     /// </summary>
     public string BrandPrimaryColor { get; set; }
 
     /// <summary>
-    /// <summary>
     /// Gets or sets the login URL used in email templates.
     /// </summary>
     public string LoginUrl { get; set; }
 
-    /// <summary>
     /// <summary>
     /// Gets or sets the invite email subject.
     /// </summary>
     public string InviteEmailSubject { get; set; }
 
     /// <summary>
-    /// <summary>
     /// Gets or sets the invite email HTML template.
-    /// Tokens: {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}
+    /// Tokens: {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}.
     /// </summary>
     public string InviteEmailHtml { get; set; }
 
-    /// <summary>
     /// <summary>
     /// Gets or sets the reset email subject.
     /// </summary>
     public string ResetEmailSubject { get; set; }
 
     /// <summary>
-    /// <summary>
     /// Gets or sets the reset email HTML template.
-    /// Tokens: {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}
+    /// Tokens: {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}.
     /// </summary>
     public string ResetEmailHtml { get; set; }
 
-    /// <summary>
     /// <summary>
     /// Gets or sets a value indicating whether on successful login the plugin should set the user's Appwrite emailVerification to true.
     /// Requires Appwrite API key.
     /// </summary>
     public bool MarkEmailVerifiedOnLogin { get; set; }
 
+    #pragma warning disable SA1201
     private const string DefaultInviteHtml = @"<!DOCTYPE html>
 <html>
 <head>
@@ -244,14 +245,6 @@ public class PluginConfiguration : BasePluginConfiguration
     </div>
   </div>
 </body>
-</html>";
-}
-
-/// <summary>
-/// Email sender provider type.
-/// </summary>
-public enum EmailProviderType
-{
-    Smtp,
-    AppwriteMessaging
+    </html>";
+    #pragma warning restore SA1201
 }

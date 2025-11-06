@@ -4,8 +4,16 @@ using Jellyfin.Plugin.Template.Configuration;
 
 namespace Jellyfin.Plugin.Template.Appwrite;
 
+/// <summary>
+/// Factory to build an Appwrite Client from plugin configuration.
+/// </summary>
 public static class AppwriteClientFactory
 {
+    /// <summary>
+    /// Creates an Appwrite <see cref="Client"/> using plugin settings.
+    /// </summary>
+    /// <param name="config">Plugin configuration.</param>
+    /// <returns>Configured Appwrite client.</returns>
     public static Client Create(PluginConfiguration config)
     {
         var endpoint = config.AppwriteEndpoint;

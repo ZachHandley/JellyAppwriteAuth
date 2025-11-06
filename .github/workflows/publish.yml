@@ -1,0 +1,104 @@
+name: Build and Publish Jellyfin Plugin
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+
+      - name: Publish (Release)
+        run: |
+          dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj \
+            -c Release \
+            -p:TreatWarningsAsErrors=false \
+            -o artifacts/publish
+
+      - name: Compute version from tag
+        id: ver
+        run: |
+          REF_NAME="${GITHUB_REF_NAME:-dev}"
+          # turn v1.2.3 -> 1.2.3.0, else default 0.0.0.0
+          if [[ "$REF_NAME" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            V_MAJOR="${BASH_REMATCH[1]}"; V_MINOR="${BASH_REMATCH[2]}"; V_PATCH="${BASH_REMATCH[3]}"
+            PLUGIN_VERSION="${V_MAJOR}.${V_MINOR}.${V_PATCH}.0"
+          else
+            PLUGIN_VERSION="0.0.0.0"
+          fi
+          echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
+          echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
+
+      - name: Prepare Pages content
+        id: prep
+        run: |
+          set -euo pipefail
+          mkdir -p public
+          ZIP_NAME="AppwriteAuth-${{ steps.ver.outputs.version }}.zip"
+          pushd artifacts/publish >/dev/null
+          zip -r ../../public/${ZIP_NAME} .
+          popd >/dev/null
+          CHECKSUM=$(md5sum public/${ZIP_NAME} | awk '{print $1}')
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+          OWNER="$GITHUB_REPOSITORY_OWNER"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          BASE_URL="https://${OWNER}.github.io/${REPO_NAME}"
+          SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          cat > public/manifest.json << JSON
+          [
+            {
+              "category": "Authentication",
+              "guid": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",
+              "name": "AppwriteAuth",
+              "description": "Appwrite-backed login and invite/reset for Jellyfin.",
+              "owner": "${OWNER}",
+              "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",
+              "versions": [
+                {
+                  "checksum": "${CHECKSUM}",
+                  "changelog": "Automated build for ${GITHUB_SHA}",
+                  "targetAbi": "10.9.0.0",
+                  "sourceUrl": "${SOURCE_URL}",
+                  "timestamp": "${NOW}",
+                  "version": "${{ steps.ver.outputs.version }}"
+                }
+              ]
+            }
+          ]
+          JSON
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
