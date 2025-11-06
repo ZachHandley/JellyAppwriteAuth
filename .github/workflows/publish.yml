@@ -41,8 +41,8 @@ jobs:
           echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
           echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
 
-      - name: Build for multiple Jellyfin ABIs (10.9/10.10/10.11)
-        id: multi
+      - name: Build for Jellyfin 10.11.0.0
+        id: single
         shell: bash
         run: |
           set -euo pipefail
@@ -52,41 +52,30 @@ jobs:
           BASE_URL="https://${OWNER}.github.io/${REPO_NAME}"
           NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # ABI -> Package version mapping
-          ENTRIES=$'10.9.0.0|10.9.11\n10.10.0.0|10.10.7\n10.11.0.0|10.11.1'
+          ABI="10.11.0.0"
+          PKGVER="10.11.1"
+          echo "Building for ABI ${ABI} with package version ${PKGVER}"
 
-          VERSIONS_JSON=""
-          while IFS='|' read -r ABI PKGVER; do
-            [ -z "${ABI:-}" ] && continue
-            echo "Building for ABI ${ABI} with package version ${PKGVER}"
+          # Patch csproj to use the target package version
+          sed -i -E "s/(Jellyfin.Controller\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+          sed -i -E "s/(Jellyfin.Model\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
 
-            # Patch csproj to use the target package version
-            sed -i -E "s/(Jellyfin.Controller\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
-            sed -i -E "s/(Jellyfin.Model\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+          # Restore + publish
+          dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+          OUTDIR="artifacts/publish-${ABI}"
+          rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
+          dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o "$OUTDIR"
 
-            # Clean + publish
-            dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
-            OUTDIR="artifacts/publish-${ABI}"
-            rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
-            dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o "$OUTDIR"
+          # Zip root contents
+          ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
+          (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
+          CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
+          SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
 
-            # Zip root contents
-            ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
-            (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
-            CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
-            SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
-
-          # Append version entry
-          ENTRY_JSON="{\"checksum\":\"${CHECKSUM}\",\"changelog\":\"Automated build for ${GITHUB_SHA}\",\"targetAbi\":\"${ABI}\",\"sourceUrl\":\"${SOURCE_URL}\",\"timestamp\":\"${NOW}\",\"version\":\"${{ steps.ver.outputs.version }}\"}"
-          VERSIONS_JSON="${VERSIONS_JSON}${ENTRY_JSON},"
-          done <<< "$ENTRIES"
-
-          # Trim trailing comma
-          VERSIONS_JSON="${VERSIONS_JSON%,}"
-
-          # Write manifest.json
+          # Write manifest.json (single version entry)
           {
-            printf '[\n  {\n    "category": "Authentication",\n    "guid": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",\n    "name": "AppwriteAuth",\n    "description": "Appwrite-backed login and invite/reset for Jellyfin.",\n    "owner": "%s",\n    "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",\n    "versions": [\n      %s\n    ]\n  }\n]\n' "$OWNER" "$VERSIONS_JSON" > public/manifest.json
+            printf '[\n  {\n    "category": "Authentication",\n    "guid": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",\n    "name": "AppwriteAuth",\n    "description": "Appwrite-backed login and invite/reset for Jellyfin.",\n    "owner": "%s",\n    "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",\n    "versions": [\n      {"checksum":"%s","changelog":"Automated build for %s","targetAbi":"%s","sourceUrl":"%s","timestamp":"%s","version":"%s"}\n    ]\n  }\n]\n' \
+              "$OWNER" "$CHECKSUM" "$GITHUB_SHA" "$ABI" "$SOURCE_URL" "$NOW" "${{ steps.ver.outputs.version }}" > public/manifest.json
           }
 
       - name: Prepare Pages content
