@@ -79,32 +79,18 @@ jobs:
             CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
             SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
 
-            # Append version entry
-            VERSIONS_JSON+=$(cat <<JSON
-            {"checksum":"${CHECKSUM}","changelog":"Automated build for ${GITHUB_SHA}","targetAbi":"${ABI}","sourceUrl":"${SOURCE_URL}","timestamp":"${NOW}","version":"${{ steps.ver.outputs.version }}"},
-JSON
-)
+          # Append version entry
+          ENTRY_JSON="{\"checksum\":\"${CHECKSUM}\",\"changelog\":\"Automated build for ${GITHUB_SHA}\",\"targetAbi\":\"${ABI}\",\"sourceUrl\":\"${SOURCE_URL}\",\"timestamp\":\"${NOW}\",\"version\":\"${{ steps.ver.outputs.version }}\"}"
+          VERSIONS_JSON="${VERSIONS_JSON}${ENTRY_JSON},"
           done
 
           # Trim trailing comma
           VERSIONS_JSON="${VERSIONS_JSON%,}"
 
           # Write manifest.json
-          cat > public/manifest.json << JSON
-          [
-            {
-              "category": "Authentication",
-              "guid": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",
-              "name": "AppwriteAuth",
-              "description": "Appwrite-backed login and invite/reset for Jellyfin.",
-              "owner": "${OWNER}",
-              "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",
-              "versions": [
-                ${VERSIONS_JSON}
-              ]
-            }
-          ]
-          JSON
+          {
+            printf '[\n  {\n    "category": "Authentication",\n    "guid": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",\n    "name": "AppwriteAuth",\n    "description": "Appwrite-backed login and invite/reset for Jellyfin.",\n    "owner": "%s",\n    "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",\n    "versions": [\n      %s\n    ]\n  }\n]\n' "$OWNER" "$VERSIONS_JSON" > public/manifest.json
+          }
 
       - name: Prepare Pages content
         id: prep
