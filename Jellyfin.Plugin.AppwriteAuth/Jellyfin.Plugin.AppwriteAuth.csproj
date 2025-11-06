@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>Jellyfin.Plugin.AppwriteAuth</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <CodeAnalysisRuleSet>../jellyfin.ruleset</CodeAnalysisRuleSet>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
+    <PackageReference Include="Appwrite" Version="0.22.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
+    <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Legacy config page (keep for now as fallback) -->
+    <None Remove="Configuration\configPage.html" />
+    <EmbeddedResource Include="Configuration\configPage.html" />
+
+    <!-- Vue SPA bundle -->
+    <None Remove="wwwroot\appwrite-auth.js" />
+    <EmbeddedResource Include="wwwroot\appwrite-auth.js" Condition="Exists('wwwroot\appwrite-auth.js')" />
+  </ItemGroup>
+
+  <!-- Build Vue SPA before .NET compilation -->
+  <Target Name="BuildVueSpa" BeforeTargets="BeforeBuild">
+    <Exec
+      Command="pnpm install &amp;&amp; pnpm run build"
+      WorkingDirectory="ClientApp"
+      Condition="!Exists('wwwroot\appwrite-auth.js')"
+    />
+  </Target>
+
+  <!-- Clean Vue build output on dotnet clean -->
+  <Target Name="CleanVueSpa" AfterTargets="Clean">
+    <RemoveDir Directories="wwwroot" />
+  </Target>
+
+</Project>

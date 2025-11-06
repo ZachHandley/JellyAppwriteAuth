@@ -12,6 +12,18 @@ description: >
 category: "Authentication"
 owner: "ZachHandley"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+- "Jellyfin.Plugin.AppwriteAuth.dll"
+dependencies:
+  - name: "Custom Tabs"
+    guid: "fbacd0b6-fd46-4a05-b0a4-2045d6a135b0"
+    version: ">=0.2.2.0"
 changelog: >
-  changelog
+  Initial release with Vue 3 admin interface:
+  - Appwrite authentication integration with automatic user provisioning
+  - Modern Vue 3 + TypeScript admin interface (155 KB gzipped)
+  - Email provider support (SMTP or Appwrite Messaging)
+  - Admin tools: Invite users, reset passwords, test email configuration
+  - Customizable branding (logo, colors, email templates)
+  - Dark mode support matching Jellyfin theme
+  - Toast notifications for user feedback
+  - Requires Custom Tabs plugin for navigation integration

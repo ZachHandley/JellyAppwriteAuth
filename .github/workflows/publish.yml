@@ -24,8 +24,28 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Vue SPA dependencies
+        run: |
+          cd Jellyfin.Plugin.AppwriteAuth/ClientApp
+          pnpm install --frozen-lockfile
+
+      - name: Build Vue SPA
+        run: |
+          cd Jellyfin.Plugin.AppwriteAuth/ClientApp
+          pnpm run build
+
       - name: Restore
-        run: dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+        run: dotnet restore Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj
 
       - name: Compute version from tag
         id: ver
@@ -55,23 +75,23 @@ jobs:
           echo "Building for ABI ${ABI} with package version ${PKGVER} targeting ${TFM}"
 
           # Update package versions
-          dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller || true
-          dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model || true
-          dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller --version ${PKGVER}
-          dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model --version ${PKGVER}
+          dotnet remove Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj package Jellyfin.Controller || true
+          dotnet remove Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj package Jellyfin.Model || true
+          dotnet add Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj package Jellyfin.Controller --version ${PKGVER}
+          dotnet add Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj package Jellyfin.Model --version ${PKGVER}
 
           # Restore and build
-          dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+          dotnet restore Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj
           OUTDIR="build-output"
           rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
-          dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -f ${TFM} -o "$OUTDIR"
+          dotnet publish Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj -c Release -f ${TFM} -o "$OUTDIR"
 
           # Create ZIP
           ZIP_NAME="AppwriteAuth-${ABI}-${VERSION}.zip"
           (cd "$OUTDIR" && zip -r "../${ZIP_NAME}" .)
 
-          # Calculate checksum
-          CHECKSUM=$(md5sum "${ZIP_NAME}" | awk '{print $1}')
+          # Calculate checksum (SHA256 for better security)
+          CHECKSUM=$(sha256sum "${ZIP_NAME}" | awk '{print $1}')
           echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
           echo "abi=$ABI" >> $GITHUB_OUTPUT

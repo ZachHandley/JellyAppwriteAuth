@@ -7,3 +7,13 @@ tmpreflect/
 .idea/
 artifacts
 .dotnet_home
+
+# Vue SPA build output
+Jellyfin.Plugin.Template/wwwroot/
+
+# Node modules and build artifacts
+**/node_modules/
+**/.pnpm-store/
+**/dist/
+**/.vite/
+**/.turbo/

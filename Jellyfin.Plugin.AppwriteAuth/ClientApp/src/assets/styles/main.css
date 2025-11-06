@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+/* Custom styles for AppwriteAuth plugin */
+:root {
+  --primary-color: #6c63ff;
+  --primary-dark: #5b54e8;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Ensure the app container takes full height */
+#appwrite-auth-root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Jellyfin-compatible styling */
+.appwrite-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}

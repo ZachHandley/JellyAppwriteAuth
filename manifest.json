@@ -1,0 +1,31 @@
+{
+  "plugins": [
+    {
+      "id": "Jellyfin.Plugin.AppwriteAuth",
+      "name": "AppwriteAuth",
+      "guid": "1f51419e-8bc3-4fb6-868e-6e8a094d9707",
+      "owner": "ZachHandley",
+      "overview": "Appwrite-backed authentication for Jellyfin with admin invite/reset tools",
+      "description": "AppwriteAuth delegates authentication to Appwrite while keeping all Jellyfin URLs unchanged. Includes a modern Vue 3 admin interface for managing users, sending invites, resetting passwords, and configuring email templates. Supports SMTP or Appwrite Messaging with customizable branding.",
+      "category": "Authentication",
+      "imageUrl": "https://raw.githubusercontent.com/ZachHandley/JellyAppwriteAuth/master/logo.png",
+      "versions": [
+        {
+          "version": "1.0.0.0",
+          "changelog": "Initial release with Vue 3 admin interface:\n- Appwrite authentication integration with automatic user provisioning\n- Modern Vue 3 + TypeScript admin interface (155 KB gzipped)\n- Email provider support (SMTP or Appwrite Messaging)\n- Admin tools: Invite users, reset passwords, test email configuration\n- Customizable branding (logo, colors, email templates)\n- Dark mode support matching Jellyfin theme\n- Toast notifications for user feedback\n- Requires Custom Tabs plugin for navigation integration",
+          "targetAbi": "10.11.0.0",
+          "sourceUrl": "https://github.com/ZachHandley/JellyAppwriteAuth/releases/download/v1.0.0.0/appwriteauth-v1.0.0.0.zip",
+          "checksum": "REPLACE_WITH_ACTUAL_SHA256_CHECKSUM",
+          "timestamp": "2025-11-06T00:00:00Z",
+          "dependencies": [
+            {
+              "id": "Jellyfin.Plugin.CustomTabs",
+              "guid": "fbacd0b6-fd46-4a05-b0a4-2045d6a135b0",
+              "version": ">=0.2.2.0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

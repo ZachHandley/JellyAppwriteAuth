@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>AppwriteAuth</title>
+</head>
+<body>
+    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-textarea,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="TemplateConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="AppwriteEndpoint">Appwrite Endpoint</label>
+                        <input id="AppwriteEndpoint" name="AppwriteEndpoint" type="text" is="emby-input" placeholder="https://cloud.appwrite.io/v1" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="AppwriteProjectId">Appwrite Project ID</label>
+                        <input id="AppwriteProjectId" name="AppwriteProjectId" type="text" is="emby-input" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="AppwriteApiKey">Appwrite API Key (optional)</label>
+                        <input id="AppwriteApiKey" name="AppwriteApiKey" type="password" is="emby-input" />
+                    </div>
+                    <hr />
+                    <h3>Branding</h3>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="BrandName">Brand Name</label>
+                        <input id="BrandName" name="BrandName" type="text" is="emby-input" placeholder="Jellyfin" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="LogoUrlOrPath">Logo URL or Server Path</label>
+                        <input id="LogoUrlOrPath" name="LogoUrlOrPath" type="text" is="emby-input" placeholder="https://example.com/logo.png or /config/plugins/AppwriteAuth/logo.png" />
+                        <div class="fieldDescription">If a local path is provided, the logo is embedded inline for better delivery.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="BrandPrimaryColor">Primary Color (HEX)</label>
+                        <input id="BrandPrimaryColor" name="BrandPrimaryColor" type="text" is="emby-input" placeholder="#6C63FF" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="LoginUrl">Login URL</label>
+                        <input id="LoginUrl" name="LoginUrl" type="text" is="emby-input" placeholder="https://your-jellyfin.example.com/web/index.html#!/login.html" />
+                    </div>
+                    <hr />
+                    <h3>Email Templates</h3>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="InviteEmailSubject">Invite Email Subject</label>
+                        <input id="InviteEmailSubject" name="InviteEmailSubject" type="text" is="emby-input" placeholder="You're invited to Jellyfin" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="InviteEmailHtml">Invite Email HTML</label>
+                        <textarea id="InviteEmailHtml" name="InviteEmailHtml" is="emby-textarea" rows="14" placeholder="HTML template with {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}"></textarea>
+                        <div class="fieldDescription">Use tokens: {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ResetEmailSubject">Reset Email Subject</label>
+                        <input id="ResetEmailSubject" name="ResetEmailSubject" type="text" is="emby-input" placeholder="Your Jellyfin password has been reset" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ResetEmailHtml">Reset Email HTML</label>
+                        <textarea id="ResetEmailHtml" name="ResetEmailHtml" is="emby-textarea" rows="14" placeholder="HTML template with {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}"></textarea>
+                        <div class="fieldDescription">Use tokens: {{brandName}}, {{email}}, {{password}}, {{loginUrl}}, {{logo}}.</div>
+                    </div>
+                    <hr />
+                    <h3>Email Provider</h3>
+                    <div class="selectContainer">
+                        <label class="selectLabel" for="EmailProvider">Provider</label>
+                        <select is="emby-select" id="EmailProvider" name="EmailProvider" class="emby-select-withcolor emby-select">
+                            <option value="1">Appwrite Messaging</option>
+                            <option value="0">SMTP</option>
+                        </select>
+                    </div>
+
+                    <h3>SMTP</h3>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpHost">SMTP Host</label>
+                        <input id="SmtpHost" name="SmtpHost" type="text" is="emby-input" />
+                    </div>
+                    <hr />
+                    <h3>Admin Actions</h3>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="InviteEmail">Invite Email</label>
+                        <input id="InviteEmail" name="InviteEmail" type="email" is="emby-input" placeholder="user@example.com" />
+                        <button is="emby-button" id="SendInviteBtn" type="button" class="raised block emby-button" style="margin-top:8px;">
+                            <span>Send Invite</span>
+                        </button>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ResetEmail">Reset Password Email</label>
+                        <input id="ResetEmail" name="ResetEmail" type="email" is="emby-input" placeholder="user@example.com" />
+                        <button is="emby-button" id="SendResetBtn" type="button" class="raised block emby-button" style="margin-top:8px;">
+                            <span>Send Reset</span>
+                        </button>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="TestEmail">Test Email</label>
+                        <input id="TestEmail" name="TestEmail" type="email" is="emby-input" placeholder="user@example.com" />
+                        <button is="emby-button" id="SendTestBtn" type="button" class="raised block emby-button" style="margin-top:8px;">
+                            <span>Send Test</span>
+                        </button>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="UserSearch">Search Local Users</label>
+                        <input id="UserSearch" name="UserSearch" type="text" is="emby-input" placeholder="Type to search Jellyfin users" />
+                        <div id="UserSearchResults" style="margin-top:8px;"></div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpPort">SMTP Port</label>
+                        <input id="SmtpPort" name="SmtpPort" type="number" is="emby-input" min="1" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpUsername">SMTP Username</label>
+                        <input id="SmtpUsername" name="SmtpUsername" type="text" is="emby-input" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpPassword">SMTP Password</label>
+                        <input id="SmtpPassword" name="SmtpPassword" type="password" is="emby-input" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpFrom">From Address</label>
+                        <input id="SmtpFrom" name="SmtpFrom" type="email" is="emby-input" />
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="SmtpEnableSsl" name="SmtpEnableSsl" type="checkbox" is="emby-checkbox" />
+                            <span>Enable SSL/TLS</span>
+                        </label>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var TemplateConfig = {
+                pluginUniqueId: 'eb5d7894-8eef-4b36-aa6f-5d124e828ce1'
+            };
+
+            document.querySelector('#TemplateConfigPage')
+                .addEventListener('pageshow', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#AppwriteEndpoint').value = config.AppwriteEndpoint || '';
+                        document.querySelector('#AppwriteProjectId').value = config.AppwriteProjectId || '';
+                        document.querySelector('#AppwriteApiKey').value = config.AppwriteApiKey || '';
+
+                        document.querySelector('#BrandName').value = config.BrandName || '';
+                        document.querySelector('#LogoUrlOrPath').value = config.LogoUrlOrPath || '';
+                        document.querySelector('#BrandPrimaryColor').value = config.BrandPrimaryColor || '';
+                        document.querySelector('#LoginUrl').value = config.LoginUrl || '';
+
+                        document.querySelector('#EmailProvider').value = (typeof config.EmailProvider === 'number' ? String(config.EmailProvider) : (config.EmailProvider || '1'));
+                        document.querySelector('#InviteEmailSubject').value = config.InviteEmailSubject || '';
+                        document.querySelector('#InviteEmailHtml').value = config.InviteEmailHtml || '';
+                        document.querySelector('#ResetEmailSubject').value = config.ResetEmailSubject || '';
+                        document.querySelector('#ResetEmailHtml').value = config.ResetEmailHtml || '';
+
+                        document.querySelector('#SmtpHost').value = config.SmtpHost || '';
+                        document.querySelector('#SmtpPort').value = config.SmtpPort || 587;
+                        document.querySelector('#SmtpUsername').value = config.SmtpUsername || '';
+                        document.querySelector('#SmtpPassword').value = config.SmtpPassword || '';
+                        document.querySelector('#SmtpFrom').value = config.SmtpFrom || '';
+                        document.querySelector('#SmtpEnableSsl').checked = config.SmtpEnableSsl || false;
+
+                        // Optional: Mark email verified on login
+                        if (!document.querySelector('#MarkEmailVerifiedOnLogin')) {
+                            var c = document.createElement('div');
+                            c.className = 'checkboxContainer checkboxContainer-withDescription';
+                            c.innerHTML = '<label class="emby-checkbox-label">\n  <input id="MarkEmailVerifiedOnLogin" type="checkbox" is="emby-checkbox" />\n  <span>Mark Appwrite email verified on successful login</span>\n</label>';
+                            document.querySelector('#TemplateConfigForm .content-primary, #TemplateConfigForm').appendChild(c);
+                        }
+                        document.querySelector('#MarkEmailVerifiedOnLogin').checked = !!config.MarkEmailVerifiedOnLogin;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#TemplateConfigForm')
+                .addEventListener('submit', function(e) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                    config.AppwriteEndpoint = document.querySelector('#AppwriteEndpoint').value;
+                    config.AppwriteProjectId = document.querySelector('#AppwriteProjectId').value;
+                    config.AppwriteApiKey = document.querySelector('#AppwriteApiKey').value;
+
+                    config.BrandName = document.querySelector('#BrandName').value;
+                    config.LogoUrlOrPath = document.querySelector('#LogoUrlOrPath').value;
+                    config.BrandPrimaryColor = document.querySelector('#BrandPrimaryColor').value;
+                    config.LoginUrl = document.querySelector('#LoginUrl').value;
+
+                    config.InviteEmailSubject = document.querySelector('#InviteEmailSubject').value;
+                    config.InviteEmailHtml = document.querySelector('#InviteEmailHtml').value;
+                    config.ResetEmailSubject = document.querySelector('#ResetEmailSubject').value;
+                    config.ResetEmailHtml = document.querySelector('#ResetEmailHtml').value;
+
+                    config.EmailProvider = parseInt(document.querySelector('#EmailProvider').value || '1');
+                    config.SmtpHost = document.querySelector('#SmtpHost').value;
+                    config.SmtpPort = parseInt(document.querySelector('#SmtpPort').value || '587');
+                    config.SmtpUsername = document.querySelector('#SmtpUsername').value;
+                    config.SmtpPassword = document.querySelector('#SmtpPassword').value;
+                    config.SmtpFrom = document.querySelector('#SmtpFrom').value;
+                    config.SmtpEnableSsl = document.querySelector('#SmtpEnableSsl').checked;
+                    config.MarkEmailVerifiedOnLogin = document.querySelector('#MarkEmailVerifiedOnLogin').checked;
+                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                e.preventDefault();
+                return false;
+            });
+
+            function getApiHeaders() {
+                var token = (ApiClient.accessToken && ApiClient.accessToken()) || ApiClient._accessToken;
+                var headers = { 'Content-Type': 'application/json' };
+                if (token) { headers['X-Emby-Token'] = token; }
+                return headers;
+            }
+
+            // Lightweight toast
+            function showToast(message, isError) {
+                var toast = document.getElementById('appwriteToast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'appwriteToast';
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '24px';
+                    toast.style.right = '24px';
+                    toast.style.zIndex = 9999;
+                    toast.style.maxWidth = '360px';
+                    toast.style.padding = '12px 14px';
+                    toast.style.borderRadius = '10px';
+                    toast.style.boxShadow = '0 8px 24px rgba(0,0,0,.15)';
+                    toast.style.fontSize = '14px';
+                    toast.style.color = '#fff';
+                    toast.style.display = 'none';
+                    document.body.appendChild(toast);
+                }
+                toast.style.background = isError ? '#dc2626' : '#2563eb';
+                toast.textContent = message;
+                toast.style.display = 'block';
+                setTimeout(function(){ toast.style.display = 'none'; }, 2500);
+            }
+
+            document.querySelector('#SendInviteBtn')
+                .addEventListener('click', function () {
+                    var email = document.querySelector('#InviteEmail').value;
+                    if (!email) { alert('Enter an email.'); return; }
+                    Dashboard.showLoadingMsg();
+                    fetch(ApiClient.getUrl('Plugin/AppwriteAuth/invite'), {
+                        method: 'POST',
+                        headers: getApiHeaders(),
+                        body: JSON.stringify({ email: email })
+                    }).then(function (res) {
+                        Dashboard.hideLoadingMsg();
+                        if (res.ok) { showToast('Invite sent.'); } else { res.text().then(function(t){ showToast('Failed: ' + t, true); }); }
+                    });
+                });
+
+            document.querySelector('#SendResetBtn')
+                .addEventListener('click', function () {
+                    var email = document.querySelector('#ResetEmail').value;
+                    if (!email) { alert('Enter an email.'); return; }
+                    Dashboard.showLoadingMsg();
+                    fetch(ApiClient.getUrl('Plugin/AppwriteAuth/reset'), {
+                        method: 'POST',
+                        headers: getApiHeaders(),
+                        body: JSON.stringify({ email: email })
+                    }).then(function (res) {
+                        Dashboard.hideLoadingMsg();
+                        if (res.ok) { showToast('Reset email sent.'); } else { res.text().then(function(t){ showToast('Failed: ' + t, true); }); }
+                    });
+                });
+
+            document.querySelector('#SendTestBtn')
+                .addEventListener('click', function () {
+                    var email = document.querySelector('#TestEmail').value;
+                    if (!email) { alert('Enter an email.'); return; }
+                    Dashboard.showLoadingMsg();
+                    fetch(ApiClient.getUrl('Plugin/AppwriteAuth/test'), {
+                        method: 'POST',
+                        headers: getApiHeaders(),
+                        body: JSON.stringify({ email: email })
+                    }).then(function (res) {
+                        Dashboard.hideLoadingMsg();
+                        if (res.ok) { showToast('Test email sent.'); } else { res.text().then(function(t){ showToast('Failed: ' + t, true); }); }
+                    });
+                });
+
+            // Local user search
+            var userSearchInput = document.querySelector('#UserSearch');
+            var userSearchResults = document.querySelector('#UserSearchResults');
+            var allUsers = [];
+            function renderUserResults(items) {
+                userSearchResults.innerHTML = '';
+                items.slice(0, 20).forEach(function(u){
+                    var a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = u.Name;
+                    a.style.display = 'block';
+                    a.style.padding = '6px 0';
+                    a.addEventListener('click', function(ev){ ev.preventDefault(); resolveEmailForUser(u.Name); });
+                    userSearchResults.appendChild(a);
+                });
+            }
+
+            function ensureUsersLoaded(){
+                if (allUsers.length) return Promise.resolve();
+                // Try ApiClient.getUsers if available, otherwise GET /Users
+                var p;
+                if (ApiClient.getUsers) {
+                    p = ApiClient.getUsers();
+                } else {
+                    p = fetch(ApiClient.getUrl('Users'), { headers: getApiHeaders() }).then(function(r){ return r.json(); });
+                }
+                return p.then(function(list){ allUsers = list || []; });
+            }
+
+            function filterUsers(q){
+                q = (q || '').toLowerCase();
+                return allUsers.filter(function(u){ return (u && u.Name && u.Name.toLowerCase().indexOf(q) >= 0); });
+            }
+
+            function resolveEmailForUser(userName){
+                Dashboard.showLoadingMsg();
+                fetch(ApiClient.getUrl('Plugin/AppwriteAuth/resolve-email') + '?userName=' + encodeURIComponent(userName), {
+                    headers: getApiHeaders()
+                }).then(function(r){ return r.json(); })
+                .then(function(res){
+                    Dashboard.hideLoadingMsg();
+                    if (res && res.email) {
+                        document.querySelector('#ResetEmail').value = res.email;
+                    } else {
+                        alert('No email found for that user.');
+                    }
+                });
+            }
+
+            userSearchInput.addEventListener('input', function(){
+                var q = userSearchInput.value || '';
+                ensureUsersLoaded().then(function(){ renderUserResults(filterUsers(q)); });
+            });
+        </script>
+    </div>
+</body>
+</html>

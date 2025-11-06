@@ -29,7 +29,7 @@ Install (Repository)
 
 Install (Manual)
 
-1) Build and publish: `dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o publish/`
+1) Build and publish: `dotnet publish Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj -c Release -o publish/`
 2) Copy contents of `publish/` to your Jellyfin plugins directory, e.g. `/var/lib/jellyfin/plugins/AppwriteAuth/`
 3) Restart Jellyfin.
 
@@ -56,7 +56,7 @@ How It Works
 
 Build
 
-- `dotnet build Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release`
+- `dotnet build Jellyfin.Plugin.AppwriteAuth/Jellyfin.Plugin.AppwriteAuth.csproj -c Release`
 - For release packaging, see `.github/workflows/publish.yml` (publishes ZIP + manifest.json to GitHub Pages).
 
 Support / Contact
@@ -155,7 +155,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
         // ${env:LOCALAPPDATA}/jellyfin
         "jellyfinDataDir" : "${env:LOCALAPPDATA}/jellyfin",
         // The name of the plugin
-        "pluginName" : "Jellyfin.Plugin.Template",
+        "pluginName" : "Jellyfin.Plugin.AppwriteAuth",
     }
    ```
 
@@ -347,10 +347,10 @@ This plugin keeps Jellyfin URLs and UI unchanged and delegates authentication to
 
 ### Code
 
-- `Jellyfin.Plugin.Template/Configuration/PluginConfiguration.cs`: Adds Appwrite settings.
-- `Jellyfin.Plugin.Template/Configuration/configPage.html`: Admin UI for settings with ENV override note.
-- `Jellyfin.Plugin.Template/Appwrite/AppwriteClientFactory.cs`: Creates an Appwrite `Client` using ENV → config fallback.
-- `Jellyfin.Plugin.Template/Appwrite/AppwriteAuthService.cs`: Minimal credential validation against Appwrite.
+- `Jellyfin.Plugin.AppwriteAuth/Configuration/PluginConfiguration.cs`: Adds Appwrite settings.
+- `Jellyfin.Plugin.AppwriteAuth/Configuration/configPage.html`: Admin UI for settings with ENV override note.
+- `Jellyfin.Plugin.AppwriteAuth/Appwrite/AppwriteClientFactory.cs`: Creates an Appwrite `Client` using ENV → config fallback.
+- `Jellyfin.Plugin.AppwriteAuth/Appwrite/AppwriteAuthService.cs`: Minimal credential validation against Appwrite.
 
 ### Next step (Auth provider)
 
