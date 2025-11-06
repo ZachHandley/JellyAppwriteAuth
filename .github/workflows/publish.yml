@@ -43,6 +43,7 @@ jobs:
 
       - name: Build for multiple Jellyfin ABIs (10.9/10.10/10.11)
         id: multi
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p public
@@ -52,16 +53,13 @@ jobs:
           NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           # ABI -> Package version mapping
-          ENTRIES=(
-            "10.9.0.0|10.9.11"
-            "10.10.0.0|10.10.7"
-            "10.11.0.0|10.11.1"
-          )
+          ENTRIES="10.9.0.0|10.9.11
+10.10.0.0|10.10.7
+10.11.0.0|10.11.1"
 
           VERSIONS_JSON=""
-          for entry in "${ENTRIES[@]}"; do
-            ABI="${entry%%|*}"
-            PKGVER="${entry##*|}"
+          while IFS='|' read -r ABI PKGVER; do
+            [ -z "${ABI:-}" ] && continue
             echo "Building for ABI ${ABI} with package version ${PKGVER}"
 
             # Patch csproj to use the target package version
@@ -83,7 +81,7 @@ jobs:
           # Append version entry
           ENTRY_JSON="{\"checksum\":\"${CHECKSUM}\",\"changelog\":\"Automated build for ${GITHUB_SHA}\",\"targetAbi\":\"${ABI}\",\"sourceUrl\":\"${SOURCE_URL}\",\"timestamp\":\"${NOW}\",\"version\":\"${{ steps.ver.outputs.version }}\"}"
           VERSIONS_JSON="${VERSIONS_JSON}${ENTRY_JSON},"
-          done
+          done <<< "$ENTRIES"
 
           # Trim trailing comma
           VERSIONS_JSON="${VERSIONS_JSON%,}"
