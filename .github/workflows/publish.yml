@@ -53,9 +53,7 @@ jobs:
           NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           # ABI -> Package version mapping
-          ENTRIES="10.9.0.0|10.9.11
-10.10.0.0|10.10.7
-10.11.0.0|10.11.1"
+          ENTRIES=$'10.9.0.0|10.9.11\n10.10.0.0|10.10.7\n10.11.0.0|10.11.1'
 
           VERSIONS_JSON=""
           while IFS='|' read -r ABI PKGVER; do
