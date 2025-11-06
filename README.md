@@ -24,8 +24,8 @@ Requirements
 Install (Repository)
 
 1) In Jellyfin, go to: Dashboard → Plugins → Repositories → Add
-2) Enter: https://zachhandley.github.io/JellyAppwriteAuth/manifest.json
-3) Save. Then navigate to Plugins → Catalog and install “AppwriteAuth”.
+2) Enter: https://raw.githubusercontent.com/ZachHandley/JellyAppwriteAuth/releases/manifest.json
+3) Save. Then navigate to Plugins → Catalog and install "AppwriteAuth".
 
 Install (Manual)
 

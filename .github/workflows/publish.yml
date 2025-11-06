@@ -42,6 +42,7 @@ jobs:
           echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
 
       - name: Build plugin for Jellyfin 10.11.0.0
+        id: build
         shell: bash
         run: |
           set -euo pipefail
