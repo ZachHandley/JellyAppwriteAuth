@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Appwrite;
 using Appwrite.Services;
-using MediaBrowser.Controller.Entities;
+using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.Template.Appwrite;
 using Jellyfin.Plugin.Template.Configuration;
 using MediaBrowser.Controller.Authentication;
@@ -50,7 +50,7 @@ public class AppwriteAuthenticationProvider : IAuthenticationProvider
     /// </summary>
     /// <param name="user">The user to evaluate.</param>
     /// <returns>Always true for this provider.</returns>
-    public bool HasPassword(User user) => true;
+    public bool HasPassword(Jellyfin.Database.Implementations.Entities.User user) => true;
 
     /// <summary>
     /// No-op; password changes should be managed via Appwrite.
@@ -61,7 +61,7 @@ public class AppwriteAuthenticationProvider : IAuthenticationProvider
     /// <param name="user">The user to change.</param>
     /// <param name="newPassword">The new password.</param>
     /// <returns>A completed task.</returns>
-    public Task ChangePassword(User user, string newPassword)
+    public Task ChangePassword(Jellyfin.Database.Implementations.Entities.User user, string newPassword)
     {
         // Password changes are handled via Appwrite; no-op here.
         return Task.CompletedTask;

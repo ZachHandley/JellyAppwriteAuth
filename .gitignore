@@ -1,5 +1,8 @@
 bin/
 obj/
+publish/
+reflect/
+tmpreflect/
 .vs/
 .idea/
 artifacts

@@ -16,7 +16,7 @@ Features
 
 Requirements
 
-- Jellyfin 10.9.x
+- Jellyfin 10.11.x
 - Appwrite Endpoint and Project ID
 - Appwrite API Key (required for Messaging + user create/reset + username-login email resolution)
 - SMTP credentials (used to back the Appwrite Messaging SMTP provider and as fallback)
