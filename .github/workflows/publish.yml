@@ -26,13 +26,6 @@ jobs:
       - name: Restore
         run: dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
 
-      - name: Publish (Release)
-        run: |
-          dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj \
-            -c Release \
-            -p:TreatWarningsAsErrors=false \
-            -o artifacts/publish
-
       - name: Compute version from tag
         id: ver
         run: |
@@ -47,22 +40,56 @@ jobs:
           echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
           echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
 
-      - name: Prepare Pages content
-        id: prep
+      - name: Build for multiple Jellyfin ABIs (10.9/10.10/10.11)
+        id: multi
         run: |
           set -euo pipefail
           mkdir -p public
-          ZIP_NAME="AppwriteAuth-${{ steps.ver.outputs.version }}.zip"
-          pushd artifacts/publish >/dev/null
-          zip -r ../../public/${ZIP_NAME} .
-          popd >/dev/null
-          CHECKSUM=$(md5sum public/${ZIP_NAME} | awk '{print $1}')
-          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
           OWNER="$GITHUB_REPOSITORY_OWNER"
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           BASE_URL="https://${OWNER}.github.io/${REPO_NAME}"
-          SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
           NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # ABI -> Package version mapping
+          mapfile -t ENTRIES << 'EOM'
+10.9.0.0|10.9.11
+10.10.0.0|10.10.7
+10.11.0.0|10.11.1
+EOM
+
+          VERSIONS_JSON=""
+          for entry in "${ENTRIES[@]}"; do
+            ABI="${entry%%|*}"
+            PKGVER="${entry##*|}"
+            echo "Building for ABI ${ABI} with package version ${PKGVER}"
+
+            # Patch csproj to use the target package version
+            sed -i -E "s/(Jellyfin.Controller\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+            sed -i -E "s/(Jellyfin.Model\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+
+            # Clean + publish
+            dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+            OUTDIR="artifacts/publish-${ABI}"
+            rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
+            dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o "$OUTDIR"
+
+            # Zip root contents
+            ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
+            (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
+            CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
+            SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
+
+            # Append version entry
+            VERSIONS_JSON+=$(cat <<JSON
+            {"checksum":"${CHECKSUM}","changelog":"Automated build for ${GITHUB_SHA}","targetAbi":"${ABI}","sourceUrl":"${SOURCE_URL}","timestamp":"${NOW}","version":"${{ steps.ver.outputs.version }}"},
+JSON
+)
+          done
+
+          # Trim trailing comma
+          VERSIONS_JSON="${VERSIONS_JSON%,}"
+
+          # Write manifest.json
           cat > public/manifest.json << JSON
           [
             {
@@ -73,18 +100,15 @@ jobs:
               "owner": "${OWNER}",
               "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",
               "versions": [
-                {
-                  "checksum": "${CHECKSUM}",
-                  "changelog": "Automated build for ${GITHUB_SHA}",
-                  "targetAbi": "10.9.0.0",
-                  "sourceUrl": "${SOURCE_URL}",
-                  "timestamp": "${NOW}",
-                  "version": "${{ steps.ver.outputs.version }}"
-                }
+                ${VERSIONS_JSON}
               ]
             }
           ]
           JSON
+
+      - name: Prepare Pages content
+        id: prep
+        run: echo "Prepared public/ with multi-ABI ZIPs and manifest.json"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -101,4 +125,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
