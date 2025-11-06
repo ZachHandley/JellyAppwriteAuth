@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Appwrite;
 using Appwrite.Services;
-using Jellyfin.Data.Entities;
+using MediaBrowser.Controller.Entities;
 using Jellyfin.Plugin.Template.Appwrite;
 using Jellyfin.Plugin.Template.Configuration;
 using MediaBrowser.Controller.Authentication;
