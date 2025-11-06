@@ -29,7 +29,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override string Name => "AppwriteAuth";
 
     /// <inheritdoc />
-    public override Guid Id => Guid.Parse("eb5d7894-8eef-4b36-aa6f-5d124e828ce1");
+    public override Guid Id => Guid.Parse("1f51419e-8bc3-4fb6-868e-6e8a094d9707");
 
     /// <summary>
     /// Gets the current plugin instance.
