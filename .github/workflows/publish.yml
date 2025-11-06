@@ -19,11 +19,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
@@ -46,8 +41,8 @@ jobs:
           echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
           echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
 
-      - name: Build for Jellyfin 10.11.0.0 + last 3
-        id: multi
+      - name: Build for Jellyfin 10.11.0.0
+        id: single
         shell: bash
         run: |
           set -euo pipefail
@@ -57,45 +52,32 @@ jobs:
           BASE_URL="https://${OWNER}.github.io/${REPO_NAME}"
           NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # Build list: current (10.11.0.0) + last 3 (10.10, 10.9, 10.8)
-          # Format: ABI|PackageVersion|TFM
-          ENTRIES=$'10.11.0.0|10.11.0|net9.0\n10.10.0.0|10.10.7|net8.0\n10.9.0.0|10.9.11|net8.0\n10.8.0.0|10.8.12|net8.0'
+          ABI="10.11.0.0"
+          PKGVER="10.11.0"
+          TFM="net9.0"
+          echo "Building for ABI ${ABI} with package version ${PKGVER} targeting ${TFM}"
 
-          VERSIONS=""
+          # Update package versions safely (avoid sed quoting pitfalls)
+          dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller || true
+          dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model || true
+          dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller --version ${PKGVER}
+          dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model --version ${PKGVER}
 
-          while IFS='|' read -r ABI PKGVER TFM; do
-            [ -z "${ABI:-}" ] && continue
-            echo "Building for ABI ${ABI} with package version ${PKGVER} targeting ${TFM}"
+          # Restore + publish for net9
+          dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+          OUTDIR="artifacts/publish-${ABI}"
+          rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
+          dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -f ${TFM} -o "$OUTDIR"
 
-            # Update package versions safely (avoid sed quoting pitfalls)
-            dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller || true
-            dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model || true
-            dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller --version ${PKGVER}
-            dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model --version ${PKGVER}
+          # Zip root contents
+          ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
+          (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
+          CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
+          SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
 
-            # Restore + publish for the target framework
-            dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
-            OUTDIR="artifacts/publish-${ABI}"
-            rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
-            dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -f ${TFM} -o "$OUTDIR"
-
-            # Zip root contents
-            ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
-            (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
-            CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
-            SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
-
-            ENTRY_JSON=$(printf '{"checksum":"%s","changelog":"Automated build for %s","targetAbi":"%s","sourceUrl":"%s","timestamp":"%s","version":"%s"}' \
+          # Single version entry
+          VERSIONS_JSON=$(printf '[{"checksum":"%s","changelog":"Automated build for %s","targetAbi":"%s","sourceUrl":"%s","timestamp":"%s","version":"%s"}]' \
               "$CHECKSUM" "$GITHUB_SHA" "$ABI" "$SOURCE_URL" "$NOW" "${{ steps.ver.outputs.version }}")
-
-            if [ -n "$VERSIONS" ]; then
-              VERSIONS="${VERSIONS},${ENTRY_JSON}"
-            else
-              VERSIONS="$ENTRY_JSON"
-            fi
-          done <<< "$ENTRIES"
-
-          VERSIONS_JSON="[$VERSIONS]"
           export OWNER VERSIONS_JSON
           chmod +x .github/scripts/make_manifest.sh
           .github/scripts/make_manifest.sh manifest.template.json public/manifest.json
