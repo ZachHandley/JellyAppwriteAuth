@@ -1,15 +1,16 @@
 ---
-name: "Template"
+name: "AppwriteAuth"
 guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
 version: "1.0.0.0"
-targetAbi: "10.9.0.0"
-framework: "net8.0"
-overview: "Short description about your plugin"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
+overview: "Appwrite-backed authentication for Jellyfin with admin invite/reset tools"
 description: >
-  This is a longer description that can span more than one
-  line and include details about your plugin.
-category: "General"
-owner: "jellyfin"
+  AppwriteAuth delegates authentication to Appwrite while keeping all Jellyfin URLs unchanged.
+  Includes admin tools to invite users and reset passwords via Appwrite Messaging or SMTP fallback,
+  with clean, branded HTML emails. Supports email or username login with automatic user provisioning.
+category: "Authentication"
+owner: "ZachHandley"
 artifacts:
 - "Jellyfin.Plugin.Template.dll"
 changelog: >

@@ -7,12 +7,59 @@ on:
   workflow_dispatch:
 
 jobs:
-  call:
-    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/publish.yaml@master
-    with:
-      version: ${{ github.event.release.tag_name }}
-      is-unstable: ${{ github.event.release.prerelease }}
-    secrets:
-      deploy-host: ${{ secrets.DEPLOY_HOST }}
-      deploy-user: ${{ secrets.DEPLOY_USER }}
-      deploy-key: ${{ secrets.DEPLOY_KEY }}
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Build plugin
+        run: dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o ./publish
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create plugin ZIP
+        run: |
+          cd publish
+          zip -r ../AppwriteAuth_${{ steps.version.outputs.VERSION }}.zip .
+          cd ..
+
+      - name: Generate MD5 checksum
+        run: |
+          md5sum AppwriteAuth_${{ steps.version.outputs.VERSION }}.zip > AppwriteAuth_${{ steps.version.outputs.VERSION }}.zip.md5
+
+      - name: Upload ZIP to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            AppwriteAuth_${{ steps.version.outputs.VERSION }}.zip
+            AppwriteAuth_${{ steps.version.outputs.VERSION }}.zip.md5
+
+  generate-manifest:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Generate manifest
+        uses: Kevinjil/jellyfin-plugin-repo-action@v1.1.1
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
+          keep_files: false
