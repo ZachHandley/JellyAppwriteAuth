@@ -51,11 +51,11 @@ jobs:
           NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           # ABI -> Package version mapping
-          mapfile -t ENTRIES << 'EOM'
-10.9.0.0|10.9.11
-10.10.0.0|10.10.7
-10.11.0.0|10.11.1
-EOM
+          ENTRIES=(
+            "10.9.0.0|10.9.11"
+            "10.10.0.0|10.10.7"
+            "10.11.0.0|10.11.1"
+          )
 
           VERSIONS_JSON=""
           for entry in "${ENTRIES[@]}"; do
