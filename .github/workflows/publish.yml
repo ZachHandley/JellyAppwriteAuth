@@ -115,25 +115,23 @@ jobs:
 
       - name: Commit manifest.json to releases branch
         run: |
+          # Save manifest.json
+          cp manifest.json /tmp/manifest.json
+
+          # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stash any changes from the build process
-          git stash --include-untracked || true
+          # Create fresh orphan releases branch
+          git checkout --orphan releases
 
-          # Fetch and checkout releases branch
-          git fetch origin releases || true
-          if git rev-parse --verify origin/releases >/dev/null 2>&1; then
-            git checkout -B releases origin/releases
-          else
-            git checkout --orphan releases
-            git rm -rf . || true
-          fi
+          # Remove everything from the index
+          git rm -rf .
 
-          # Copy manifest from stash/working directory
-          git checkout stash -- manifest.json 2>/dev/null || git checkout master -- manifest.json || cp ../manifest.json . || true
-
-          # Commit and force push to releases branch
+          # Add only manifest.json
+          cp /tmp/manifest.json manifest.json
           git add manifest.json
-          git commit -m "Update manifest.json for release ${{ steps.ver.outputs.ref_name }}" || echo "No changes to commit"
+
+          # Commit and force push
+          git commit -m "Update manifest.json for release ${{ steps.ver.outputs.ref_name }}"
           git push -f origin releases
