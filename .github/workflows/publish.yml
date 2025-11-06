@@ -9,15 +9,15 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
@@ -41,63 +41,87 @@ jobs:
           echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
           echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
 
-      - name: Build for Jellyfin 10.11.0.0
-        id: single
+      - name: Build plugin for Jellyfin 10.11.0.0
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p public
-          OWNER="$GITHUB_REPOSITORY_OWNER"
-          REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          BASE_URL="https://${OWNER}.github.io/${REPO_NAME}"
-          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           ABI="10.11.0.0"
           PKGVER="10.11.0"
           TFM="net9.0"
+          VERSION="${{ steps.ver.outputs.version }}"
+
           echo "Building for ABI ${ABI} with package version ${PKGVER} targeting ${TFM}"
 
-          # Update package versions safely (avoid sed quoting pitfalls)
+          # Update package versions
           dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller || true
           dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model || true
           dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller --version ${PKGVER}
           dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model --version ${PKGVER}
 
-          # Restore + publish for net9
+          # Restore and build
           dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
-          OUTDIR="artifacts/publish-${ABI}"
+          OUTDIR="build-output"
           rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
           dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -f ${TFM} -o "$OUTDIR"
 
-          # Zip root contents
-          ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
-          (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
-          CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
-          SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
+          # Create ZIP
+          ZIP_NAME="AppwriteAuth-${ABI}-${VERSION}.zip"
+          (cd "$OUTDIR" && zip -r "../${ZIP_NAME}" .)
 
-          # Single version entry
-          VERSIONS_JSON=$(printf '[{"checksum":"%s","changelog":"Automated build for %s","targetAbi":"%s","sourceUrl":"%s","timestamp":"%s","version":"%s"}]' \
-              "$CHECKSUM" "$GITHUB_SHA" "$ABI" "$SOURCE_URL" "$NOW" "${{ steps.ver.outputs.version }}")
+          # Calculate checksum
+          CHECKSUM=$(md5sum "${ZIP_NAME}" | awk '{print $1}')
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
+          echo "abi=$ABI" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AppwriteAuth-*.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+      - name: Generate manifest.json
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          OWNER="$GITHUB_REPOSITORY_OWNER"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          VERSION="${{ steps.ver.outputs.version }}"
+          CHECKSUM="${{ steps.build.outputs.checksum }}"
+          ABI="${{ steps.build.outputs.abi }}"
+          ZIP_NAME="${{ steps.build.outputs.zip_name }}"
+          TAG_NAME="${{ steps.ver.outputs.ref_name }}"
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # GitHub Release URL
+          SOURCE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG_NAME}/${ZIP_NAME}"
+
+          # Create versions JSON entry
+          VERSIONS_JSON=$(printf '[{"checksum":"%s","changelog":"Release %s","targetAbi":"%s","sourceUrl":"%s","timestamp":"%s","version":"%s"}]' \
+              "$CHECKSUM" "$VERSION" "$ABI" "$SOURCE_URL" "$NOW" "$VERSION")
+
           export OWNER VERSIONS_JSON
           chmod +x .github/scripts/make_manifest.sh
-          .github/scripts/make_manifest.sh manifest.template.json public/manifest.json
+          .github/scripts/make_manifest.sh manifest.template.json manifest.json
 
-      - name: Prepare Pages content
-        id: prep
-        run: echo "Prepared public/ with multi-ABI ZIPs and manifest.json"
+          echo "Generated manifest.json:"
+          cat manifest.json
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
+      - name: Commit manifest.json to releases branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          # Create or checkout releases branch
+          git fetch origin releases || true
+          git checkout -B releases origin/releases || git checkout -b releases
+
+          # Copy manifest to releases branch
+          git add manifest.json
+          git commit -m "Update manifest.json for release ${{ steps.ver.outputs.ref_name }}" || echo "No changes to commit"
+          git push origin releases
