@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - 'v*'
+      - '*.*.*'
 
 permissions:
   contents: write
@@ -30,8 +31,8 @@ jobs:
         id: ver
         run: |
           REF_NAME="${GITHUB_REF_NAME:-dev}"
-          # turn v1.2.3 -> 1.2.3.0, else default 0.0.0.0
-          if [[ "$REF_NAME" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+          # Support tags like v1.2.3 or 1.2.3 -> 1.2.3.0
+          if [[ "$REF_NAME" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             V_MAJOR="${BASH_REMATCH[1]}"; V_MINOR="${BASH_REMATCH[2]}"; V_PATCH="${BASH_REMATCH[3]}"
             PLUGIN_VERSION="${V_MAJOR}.${V_MINOR}.${V_PATCH}.0"
           else
