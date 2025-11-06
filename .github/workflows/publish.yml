@@ -61,9 +61,11 @@ jobs:
             [ -z "${ABI:-}" ] && continue
             echo "Building for ABI ${ABI} with package version ${PKGVER}"
 
-            # Patch csproj to use the target package version
-            sed -i -E "s/(Jellyfin.Controller\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
-            sed -i -E "s/(Jellyfin.Model\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+            # Update package versions safely (avoid sed quoting pitfalls)
+            dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller || true
+            dotnet remove Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model || true
+            dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Controller --version ${PKGVER}
+            dotnet add Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj package Jellyfin.Model --version ${PKGVER}
 
             # Restore + publish
             dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
