@@ -373,3 +373,42 @@ Due to how plugins in Jellyfin work, when your plugin is compiled into a binary,
 If you accept the default GPLv3 license from this template, all will be good. However if you choose a different license, please keep this fact in mind, as it might not always be obvious that an, e.g. MIT-licensed plugin would become GPLv3 when compiled.
 
 Please note that this also means making "proprietary", source-unavailable, or otherwise "hidden" plugins for public consumption is not permitted. To build a Jellyfin plugin for distribution to others, it must be under the GPLv3 or a permissive open-source license that can be linked against the GPLv3.
+
+## AppwriteAuth: Lightweight Appwrite wrapper for Jellyfin login
+
+This plugin keeps Jellyfin URLs and UI unchanged and delegates authentication to Appwrite.
+
+- Configure Appwrite via environment variables (preferred):
+  - `APPWRITE_ENDPOINT` (e.g., `https://cloud.appwrite.io/v1`)
+  - `APPWRITE_PROJECT_ID`
+  - `APPWRITE_API_KEY` (optional, for server-side team lookups)
+
+- Or via the plugin settings page (overridden by ENV when set):
+  - Appwrite Endpoint
+  - Appwrite Project ID
+  - Appwrite API Key (optional)
+  - Team → Role Mapping (JSON)
+
+### Flow
+
+1) User submits Jellyfin’s standard login form.
+2) The plugin validates credentials against Appwrite.
+3) Optionally map Appwrite Teams to Jellyfin roles/policies (using `TeamToRoleMapJson`).
+4) If valid, Jellyfin creates/updates the local user and proceeds as normal.
+
+### Code
+
+- `Jellyfin.Plugin.Template/Configuration/PluginConfiguration.cs`: Adds Appwrite settings.
+- `Jellyfin.Plugin.Template/Configuration/configPage.html`: Admin UI for settings with ENV override note.
+- `Jellyfin.Plugin.Template/Appwrite/AppwriteClientFactory.cs`: Creates an Appwrite `Client` using ENV → config fallback.
+- `Jellyfin.Plugin.Template/Appwrite/AppwriteAuthService.cs`: Minimal credential validation against Appwrite.
+
+### Next step (Auth provider)
+
+Implement Jellyfin’s authentication provider and delegate to `AppwriteAuthService`. The exact interface methods can vary by Jellyfin version; use the interfaces from `MediaBrowser.Controller.Authentication` for the Jellyfin version referenced in the `.csproj` (10.9.11). A typical flow:
+
+- Receive username/password in the provider.
+- Call `AppwriteAuthService.ValidateCredentialsAsync`.
+- On success, create/update a Jellyfin user and map teams to roles.
+
+This approach remains a super lightweight wrapper over Jellyfin’s existing login and routes.
