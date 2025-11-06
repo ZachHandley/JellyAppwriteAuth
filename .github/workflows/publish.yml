@@ -118,11 +118,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Create or checkout releases branch
-          git fetch origin releases || true
-          git checkout -B releases origin/releases || git checkout -b releases
+          # Stash any changes from the build process
+          git stash --include-untracked || true
 
-          # Copy manifest to releases branch
+          # Fetch and checkout releases branch
+          git fetch origin releases || true
+          if git rev-parse --verify origin/releases >/dev/null 2>&1; then
+            git checkout -B releases origin/releases
+          else
+            git checkout --orphan releases
+            git rm -rf . || true
+          fi
+
+          # Copy manifest from stash/working directory
+          git checkout stash -- manifest.json 2>/dev/null || git checkout master -- manifest.json || cp ../manifest.json . || true
+
+          # Commit and force push to releases branch
           git add manifest.json
           git commit -m "Update manifest.json for release ${{ steps.ver.outputs.ref_name }}" || echo "No changes to commit"
-          git push origin releases
+          git push -f origin releases
