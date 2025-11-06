@@ -1,0 +1,12 @@
+[
+  {
+    "category": "Authentication",
+    "guid": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",
+    "name": "AppwriteAuth",
+    "description": "Appwrite-backed login and invite/reset for Jellyfin.",
+    "owner": "__OWNER__",
+    "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",
+    "versions": __VERSIONS__
+  }
+]
+

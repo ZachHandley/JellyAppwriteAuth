@@ -41,8 +41,8 @@ jobs:
           echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
           echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
 
-      - name: Build for Jellyfin 10.11.0.0
-        id: single
+      - name: Build for Jellyfin 10.11.0.0 + last 3
+        id: multi
         shell: bash
         run: |
           set -euo pipefail
@@ -52,31 +52,45 @@ jobs:
           BASE_URL="https://${OWNER}.github.io/${REPO_NAME}"
           NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          ABI="10.11.0.0"
-          PKGVER="10.11.1"
-          echo "Building for ABI ${ABI} with package version ${PKGVER}"
+          # Build list: current (10.11.0.0) + last 3 (10.10, 10.9, 10.8)
+          ENTRIES=$'10.11.0.0|10.11.1\n10.10.0.0|10.10.7\n10.9.0.0|10.9.11\n10.8.0.0|10.8.12'
 
-          # Patch csproj to use the target package version
-          sed -i -E "s/(Jellyfin.Controller\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
-          sed -i -E "s/(Jellyfin.Model\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+          VERSIONS=""
 
-          # Restore + publish
-          dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
-          OUTDIR="artifacts/publish-${ABI}"
-          rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
-          dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o "$OUTDIR"
+          while IFS='|' read -r ABI PKGVER; do
+            [ -z "${ABI:-}" ] && continue
+            echo "Building for ABI ${ABI} with package version ${PKGVER}"
 
-          # Zip root contents
-          ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
-          (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
-          CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
-          SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
+            # Patch csproj to use the target package version
+            sed -i -E "s/(Jellyfin.Controller\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+            sed -i -E "s/(Jellyfin.Model\" Version=\")[^"]+(\")/\1${PKGVER}\2/" Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
 
-          # Write manifest.json (single version entry)
-          {
-            printf '[\n  {\n    "category": "Authentication",\n    "guid": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",\n    "name": "AppwriteAuth",\n    "description": "Appwrite-backed login and invite/reset for Jellyfin.",\n    "owner": "%s",\n    "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",\n    "versions": [\n      {"checksum":"%s","changelog":"Automated build for %s","targetAbi":"%s","sourceUrl":"%s","timestamp":"%s","version":"%s"}\n    ]\n  }\n]\n' \
-              "$OWNER" "$CHECKSUM" "$GITHUB_SHA" "$ABI" "$SOURCE_URL" "$NOW" "${{ steps.ver.outputs.version }}" > public/manifest.json
-          }
+            # Restore + publish
+            dotnet restore Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj
+            OUTDIR="artifacts/publish-${ABI}"
+            rm -rf "$OUTDIR" && mkdir -p "$OUTDIR"
+            dotnet publish Jellyfin.Plugin.Template/Jellyfin.Plugin.Template.csproj -c Release -o "$OUTDIR"
+
+            # Zip root contents
+            ZIP_NAME="AppwriteAuth-${ABI}-${{ steps.ver.outputs.version }}.zip"
+            (cd "$OUTDIR" && zip -r "../../public/${ZIP_NAME}" .)
+            CHECKSUM=$(md5sum "public/${ZIP_NAME}" | awk '{print $1}')
+            SOURCE_URL="${BASE_URL}/${ZIP_NAME}"
+
+            ENTRY_JSON=$(printf '{"checksum":"%s","changelog":"Automated build for %s","targetAbi":"%s","sourceUrl":"%s","timestamp":"%s","version":"%s"}' \
+              "$CHECKSUM" "$GITHUB_SHA" "$ABI" "$SOURCE_URL" "$NOW" "${{ steps.ver.outputs.version }}")
+
+            if [ -n "$VERSIONS" ]; then
+              VERSIONS="${VERSIONS},${ENTRY_JSON}"
+            else
+              VERSIONS="$ENTRY_JSON"
+            fi
+          done <<< "$ENTRIES"
+
+          VERSIONS_JSON="[$VERSIONS]"
+          export OWNER VERSIONS_JSON
+          chmod +x .github/scripts/make_manifest.sh
+          .github/scripts/make_manifest.sh manifest.template.json public/manifest.json
 
       - name: Prepare Pages content
         id: prep
