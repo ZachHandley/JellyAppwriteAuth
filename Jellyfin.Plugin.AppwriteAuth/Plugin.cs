@@ -43,13 +43,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         [
             new PluginPageInfo
             {
-                Name = "AppwriteAuth",
+                Name = "appwriteauth",
+                DisplayName = "Appwrite Authentication",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
-                EnableInMainMenu = true
+                EnableInMainMenu = true,
+                MenuIcon = "https://appwrite.io/logo.svg"
             },
             new PluginPageInfo
             {
-                Name = "AppwriteAuthJS",
+                Name = "appwriteauthjs",
                 EmbeddedResourcePath = $"{GetType().Namespace}.wwwroot.appwrite-auth.js"
             }
         ];
