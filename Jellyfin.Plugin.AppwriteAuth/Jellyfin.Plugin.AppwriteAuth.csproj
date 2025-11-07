@@ -24,11 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Legacy config page (keep for now as fallback) -->
+    <!-- Configuration page HTML (minimal container for Vue app) -->
     <None Remove="Configuration\configPage.html" />
     <EmbeddedResource Include="Configuration\configPage.html" />
 
-    <!-- Vue SPA bundle -->
+    <!-- Vue SPA bundle (served via GetPages() using DLNA pattern) -->
     <None Remove="wwwroot\appwrite-auth.js" />
     <EmbeddedResource Include="wwwroot\appwrite-auth.js" Condition="Exists('wwwroot\appwrite-auth.js')" />
   </ItemGroup>

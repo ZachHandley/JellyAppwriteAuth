@@ -43,8 +43,13 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         [
             new PluginPageInfo
             {
-                Name = Name,
-                EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace)
+                Name = "AppwriteAuth",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html"
+            },
+            new PluginPageInfo
+            {
+                Name = "AppwriteAuthJS",
+                EmbeddedResourcePath = $"{GetType().Namespace}.wwwroot.appwrite-auth.js"
             }
         ];
     }
