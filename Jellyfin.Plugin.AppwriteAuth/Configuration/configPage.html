@@ -5,7 +5,7 @@
     <title>Appwrite Authentication</title>
 </head>
 <body>
-<div data-role="page" class="page type-interior pluginConfigurationPage" data-controller="__plugin/appwriteauthjs">
+<div id="appwriteAuthConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
     <div data-role="content">
         <div class="content-primary">
             <form id="appwriteAuthForm" class="esqConfigurationForm">
@@ -111,6 +111,114 @@
             </form>
         </div>
     </div>
+
+    <script type="text/javascript">
+        var AppwriteAuthConfig = {
+            pluginId: '1f51419e-8bc3-4fb6-868e-6e8a094d9707',
+
+            loadConfiguration: function () {
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(AppwriteAuthConfig.pluginId)
+                    .then(function(config) {
+                        // Appwrite settings
+                        document.querySelector('#appwriteEndpoint').value = config.AppwriteEndpoint || '';
+                        document.querySelector('#appwriteProjectId').value = config.AppwriteProjectId || '';
+                        document.querySelector('#appwriteApiKey').value = config.AppwriteApiKey || '';
+                        document.querySelector('#markEmailVerified').checked = config.MarkEmailVerifiedOnLogin || false;
+
+                        // Email provider
+                        document.querySelector('#emailProvider').value = config.EmailProvider || 0;
+
+                        // SMTP settings
+                        document.querySelector('#smtpHost').value = config.SmtpHost || '';
+                        document.querySelector('#smtpPort').value = config.SmtpPort || 587;
+                        document.querySelector('#smtpUsername').value = config.SmtpUsername || '';
+                        document.querySelector('#smtpPassword').value = config.SmtpPassword || '';
+                        document.querySelector('#smtpFrom').value = config.SmtpFrom || '';
+                        document.querySelector('#smtpEnableSsl').checked = config.SmtpEnableSsl !== false;
+
+                        // Branding
+                        document.querySelector('#brandName').value = config.BrandName || 'Jellyfin';
+                        document.querySelector('#loginUrl').value = config.LoginUrl || '';
+
+                        // Show/hide SMTP settings based on provider
+                        AppwriteAuthConfig.updateSmtpVisibility(config.EmailProvider || 0);
+                    })
+                    .catch(function(error) {
+                        console.error('Error loading configuration:', error);
+                        Dashboard.alert('Error loading configuration: ' + error);
+                    })
+                    .finally(function() {
+                        Dashboard.hideLoadingMsg();
+                    });
+            },
+
+            updateSmtpVisibility: function(provider) {
+                var smtpSettings = document.querySelector('#smtpSettings');
+                if (smtpSettings) {
+                    smtpSettings.style.display = (provider == 0) ? 'block' : 'none';
+                }
+            },
+
+            saveConfiguration: function () {
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(AppwriteAuthConfig.pluginId)
+                    .then(function(config) {
+                        // Appwrite settings
+                        config.AppwriteEndpoint = document.querySelector('#appwriteEndpoint').value;
+                        config.AppwriteProjectId = document.querySelector('#appwriteProjectId').value;
+                        config.AppwriteApiKey = document.querySelector('#appwriteApiKey').value;
+                        config.MarkEmailVerifiedOnLogin = document.querySelector('#markEmailVerified').checked;
+
+                        // Email provider
+                        config.EmailProvider = parseInt(document.querySelector('#emailProvider').value) || 0;
+
+                        // SMTP settings
+                        config.SmtpHost = document.querySelector('#smtpHost').value;
+                        config.SmtpPort = parseInt(document.querySelector('#smtpPort').value) || 587;
+                        config.SmtpUsername = document.querySelector('#smtpUsername').value;
+                        config.SmtpPassword = document.querySelector('#smtpPassword').value;
+                        config.SmtpFrom = document.querySelector('#smtpFrom').value;
+                        config.SmtpEnableSsl = document.querySelector('#smtpEnableSsl').checked;
+
+                        // Branding
+                        config.BrandName = document.querySelector('#brandName').value;
+                        config.LoginUrl = document.querySelector('#loginUrl').value;
+
+                        ApiClient.updatePluginConfiguration(AppwriteAuthConfig.pluginId, config)
+                            .then(Dashboard.processPluginConfigurationUpdateResult);
+                    })
+                    .catch(function(error) {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Error saving configuration: ' + error);
+                    });
+            },
+
+            registerEvents: function () {
+                // Handle form submission
+                document.querySelector('#appwriteAuthForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    AppwriteAuthConfig.saveConfiguration();
+                    return false;
+                });
+
+                // Handle email provider change
+                document.querySelector('#emailProvider').addEventListener('change', function(e) {
+                    AppwriteAuthConfig.updateSmtpVisibility(parseInt(e.target.value));
+                });
+            }
+        };
+
+        // Initialize when page shows
+        document.addEventListener('pageshow', function (e) {
+            if (e.target.id === 'appwriteAuthConfigPage') {
+                AppwriteAuthConfig.loadConfiguration();
+                AppwriteAuthConfig.registerEvents();
+            }
+        });
+    </script>
 </div>
 </body>
 </html>
