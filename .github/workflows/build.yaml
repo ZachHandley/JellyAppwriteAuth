@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    tags-ignore:
+      - '**'  # Don't run on tag pushes (publish.yml handles releases)
     paths-ignore:
       - '**/*.md'
   pull_request:

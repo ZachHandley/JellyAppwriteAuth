@@ -90,8 +90,8 @@ jobs:
           ZIP_NAME="AppwriteAuth-${ABI}-${VERSION}.zip"
           (cd "$OUTDIR" && zip -r "../${ZIP_NAME}" .)
 
-          # Calculate checksum (SHA256 for better security)
-          CHECKSUM=$(sha256sum "${ZIP_NAME}" | awk '{print $1}')
+          # Calculate checksum (MD5 - Jellyfin's default)
+          CHECKSUM=$(md5sum "${ZIP_NAME}" | awk '{print $1}')
           echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
           echo "abi=$ABI" >> $GITHUB_OUTPUT
