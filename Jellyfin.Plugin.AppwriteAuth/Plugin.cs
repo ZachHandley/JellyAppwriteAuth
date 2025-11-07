@@ -44,7 +44,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = "AppwriteAuth",
-                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html"
+                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
+                EnableInMainMenu = true
             },
             new PluginPageInfo
             {
