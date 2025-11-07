@@ -1,16 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>AppwriteAuth Configuration</title>
+    <meta charset="UTF-8">
+    <title>Appwrite Authentication</title>
 </head>
 <body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage" data-controller="__plugin/appwriteauthjs">
-        <div data-role="content">
-            <div class="content-primary">
-                <div id="appwrite-auth-root"></div>
-            </div>
+<div data-role="page" class="page type-interior pluginConfigurationPage" data-controller="__plugin/appwriteauthjs">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="appwriteAuthForm" class="esqConfigurationForm">
+                <div class="verticalSection verticalSection-extrabottompadding">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">Appwrite Authentication Settings</h2>
+                        <a is="emby-linkbutton" class="raised button-alt headerHelpButton emby-button" target="_blank" href="https://github.com/ZachHandley/JellyAppwriteAuth">${Help}</a>
+                    </div>
+
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <h3>Appwrite Configuration</h3>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="appwriteEndpoint" label="Appwrite Endpoint:" />
+                            <div class="fieldDescription">
+                                The URL of your Appwrite instance (e.g., https://cloud.appwrite.io/v1)
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="appwriteProjectId" label="Appwrite Project ID:" />
+                            <div class="fieldDescription">
+                                Your Appwrite project identifier
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="password" id="appwriteApiKey" label="Appwrite API Key (Optional):" />
+                            <div class="fieldDescription">
+                                Server-side API key for admin operations (optional)
+                            </div>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label>
+                                <input type="checkbox" is="emby-checkbox" id="markEmailVerified" />
+                                <span>Mark Email as Verified on Login</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <h3>Email Configuration</h3>
+
+                        <div class="selectContainer">
+                            <select is="emby-select" id="emailProvider" label="Email Provider:">
+                                <option value="0">SMTP</option>
+                                <option value="1">Appwrite Messaging</option>
+                            </select>
+                        </div>
+
+                        <div id="smtpSettings" class="verticalSection">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="text" id="smtpHost" label="SMTP Host:" />
+                            </div>
+
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="smtpPort" label="SMTP Port:" />
+                            </div>
+
+                            <div class="inputContainer">
+                                <input is="emby-input" type="text" id="smtpUsername" label="SMTP Username:" />
+                            </div>
+
+                            <div class="inputContainer">
+                                <input is="emby-input" type="password" id="smtpPassword" label="SMTP Password:" />
+                            </div>
+
+                            <div class="inputContainer">
+                                <input is="emby-input" type="email" id="smtpFrom" label="From Email:" />
+                            </div>
+
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input type="checkbox" is="emby-checkbox" id="smtpEnableSsl" />
+                                    <span>Enable SSL/TLS</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <h3>Branding</h3>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="brandName" label="Brand Name:" />
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="loginUrl" label="Login URL:" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit" data-theme="b" class="raised button-submit block">
+                            <span>${Save}</span>
+                        </button>
+                        <button is="emby-button" type="button" class="raised button-cancel block btnCancel" onclick="history.back();">
+                            <span>${ButtonCancel}</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 </body>
 </html>

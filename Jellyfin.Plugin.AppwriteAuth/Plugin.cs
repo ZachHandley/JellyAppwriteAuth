@@ -31,6 +31,9 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <inheritdoc />
     public override Guid Id => Guid.Parse("1f51419e-8bc3-4fb6-868e-6e8a094d9707");
 
+    /// <inheritdoc />
+    public override string Description => "Appwrite-backed authentication with admin invite and reset tools";
+
     /// <summary>
     /// Gets the current plugin instance.
     /// </summary>
@@ -44,20 +47,14 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = "appwriteauth",
-                DisplayName = "Appwrite Authentication",
+                DisplayName = "Appwrite Auth",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
-                EnableInMainMenu = true,
-                MenuIcon = "https://appwrite.io/logo.svg"
+                EnableInMainMenu = true
             },
             new PluginPageInfo
             {
                 Name = "appwriteauthjs",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.js"
-            },
-            new PluginPageInfo
-            {
-                Name = "appwriteauthbundle",
-                EmbeddedResourcePath = $"{GetType().Namespace}.wwwroot.appwrite-auth-bundle.js"
             }
         ];
     }

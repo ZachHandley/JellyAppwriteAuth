@@ -1,78 +1,101 @@
-/**
- * Data-controller wrapper for Jellyfin plugin system
- * This file implements the pattern Jellyfin expects: export default function(view)
- * It loads the Vue UMD bundle and manually mounts the app
- */
+const AppwriteAuthConfig = {
+    pluginUniqueId: '1f51419e-8bc3-4fb6-868e-6e8a094d9707',
+
+    loadConfiguration: function (page) {
+        Dashboard.showLoadingMsg();
+
+        ApiClient.getPluginConfiguration(this.pluginUniqueId)
+            .then(function(config) {
+                // Appwrite settings
+                page.querySelector('#appwriteEndpoint').value = config.AppwriteEndpoint || '';
+                page.querySelector('#appwriteProjectId').value = config.AppwriteProjectId || '';
+                page.querySelector('#appwriteApiKey').value = config.AppwriteApiKey || '';
+                page.querySelector('#markEmailVerified').checked = config.MarkEmailVerifiedOnLogin || false;
+
+                // Email provider
+                page.querySelector('#emailProvider').value = config.EmailProvider || 0;
+
+                // SMTP settings
+                page.querySelector('#smtpHost').value = config.SmtpHost || '';
+                page.querySelector('#smtpPort').value = config.SmtpPort || 587;
+                page.querySelector('#smtpUsername').value = config.SmtpUsername || '';
+                page.querySelector('#smtpPassword').value = config.SmtpPassword || '';
+                page.querySelector('#smtpFrom').value = config.SmtpFrom || '';
+                page.querySelector('#smtpEnableSsl').checked = config.SmtpEnableSsl !== false;
+
+                // Branding
+                page.querySelector('#brandName').value = config.BrandName || 'Jellyfin';
+                page.querySelector('#loginUrl').value = config.LoginUrl || '';
+
+                // Show/hide SMTP settings based on provider
+                AppwriteAuthConfig.updateSmtpVisibility(page, config.EmailProvider || 0);
+            })
+            .finally(function() {
+                Dashboard.hideLoadingMsg();
+            });
+    },
+
+    updateSmtpVisibility: function(page, provider) {
+        const smtpSettings = page.querySelector('#smtpSettings');
+        if (smtpSettings) {
+            smtpSettings.style.display = (provider == 0) ? 'block' : 'none';
+        }
+    },
+
+    save: function(page) {
+        Dashboard.showLoadingMsg();
+
+        return new Promise((resolve) => {
+            ApiClient.getPluginConfiguration(this.pluginUniqueId)
+                .then(function(config) {
+                    // Appwrite settings
+                    config.AppwriteEndpoint = page.querySelector('#appwriteEndpoint').value;
+                    config.AppwriteProjectId = page.querySelector('#appwriteProjectId').value;
+                    config.AppwriteApiKey = page.querySelector('#appwriteApiKey').value;
+                    config.MarkEmailVerifiedOnLogin = page.querySelector('#markEmailVerified').checked;
+
+                    // Email provider
+                    config.EmailProvider = parseInt(page.querySelector('#emailProvider').value) || 0;
+
+                    // SMTP settings
+                    config.SmtpHost = page.querySelector('#smtpHost').value;
+                    config.SmtpPort = parseInt(page.querySelector('#smtpPort').value) || 587;
+                    config.SmtpUsername = page.querySelector('#smtpUsername').value;
+                    config.SmtpPassword = page.querySelector('#smtpPassword').value;
+                    config.SmtpFrom = page.querySelector('#smtpFrom').value;
+                    config.SmtpEnableSsl = page.querySelector('#smtpEnableSsl').checked;
+
+                    // Branding
+                    config.BrandName = page.querySelector('#brandName').value;
+                    config.LoginUrl = page.querySelector('#loginUrl').value;
+
+                    ApiClient.updatePluginConfiguration(AppwriteAuthConfig.pluginUniqueId, config)
+                        .then(Dashboard.processPluginConfigurationUpdateResult)
+                        .then(resolve);
+                })
+                .catch(function(error) {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('Error saving configuration: ' + error);
+                });
+        });
+    }
+};
+
 export default function(view) {
-    console.log('[AppwriteAuth] Data-controller initializing...', view);
+    // Handle form submission
+    view.querySelector('#appwriteAuthForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        AppwriteAuthConfig.save(view);
+        return false;
+    });
 
-    /**
-     * Initialize the Vue app once the bundle is loaded
-     */
-    const initVueApp = () => {
-        console.log('[AppwriteAuth] Attempting to mount Vue app...');
+    // Handle email provider change
+    view.querySelector('#emailProvider').addEventListener('change', function(e) {
+        AppwriteAuthConfig.updateSmtpVisibility(view, parseInt(e.target.value));
+    });
 
-        // Check if the Vue bundle has loaded and exposed the API
-        if (window.AppwriteAuthUI && typeof window.AppwriteAuthUI.mount === 'function') {
-            // Find the mount target within the controller's view
-            const mountTarget = view.querySelector('#appwrite-auth-root');
-
-            if (mountTarget) {
-                console.log('[AppwriteAuth] Mount target found, mounting Vue app...');
-                window.AppwriteAuthUI.mount('#appwrite-auth-root');
-            } else {
-                console.error('[AppwriteAuth] Mount target #appwrite-auth-root not found in view');
-            }
-        } else {
-            console.error('[AppwriteAuth] Vue bundle not loaded or AppwriteAuthUI not available');
-        }
-    };
-
-    /**
-     * Load the Vue UMD bundle dynamically
-     */
-    const loadVueBundle = () => {
-        // Check if already loaded
-        if (window.AppwriteAuthUI) {
-            console.log('[AppwriteAuth] Vue bundle already loaded');
-            initVueApp();
-            return;
-        }
-
-        console.log('[AppwriteAuth] Loading Vue bundle...');
-
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'appwriteauthbundle'; // References the PluginPageInfo Name
-
-        script.onload = () => {
-            console.log('[AppwriteAuth] Vue bundle loaded successfully');
-            initVueApp();
-        };
-
-        script.onerror = (error) => {
-            console.error('[AppwriteAuth] Failed to load Vue bundle:', error);
-        };
-
-        document.head.appendChild(script);
-    };
-
-    // Start loading
-    loadVueBundle();
-
-    /**
-     * Cleanup when page is hidden/navigated away
-     */
-    const cleanup = () => {
-        console.log('[AppwriteAuth] Cleaning up Vue app...');
-        if (window.AppwriteAuthUI && typeof window.AppwriteAuthUI.unmount === 'function') {
-            window.AppwriteAuthUI.unmount();
-        }
-    };
-
-    // Register cleanup handlers
-    window.addEventListener('pagehide', cleanup);
-
-    // Also cleanup on beforeunload for better compatibility
-    window.addEventListener('beforeunload', cleanup);
+    // Load configuration when page shows
+    window.addEventListener('pageshow', function() {
+        AppwriteAuthConfig.loadConfiguration(view);
+    });
 }

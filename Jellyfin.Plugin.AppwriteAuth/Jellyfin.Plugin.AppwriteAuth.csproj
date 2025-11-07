@@ -35,6 +35,9 @@
     <!-- Vue SPA bundle (loaded dynamically by wrapper) -->
     <None Remove="wwwroot/appwrite-auth-bundle.js" />
     <EmbeddedResource Include="wwwroot/appwrite-auth-bundle.js" />
+
+    <!-- Plugin logo images (displayed in Jellyfin Dashboard) -->
+    <EmbeddedResource Include="Images/*.png" />
   </ItemGroup>
 
   <!-- Build Vue SPA before .NET compilation -->
