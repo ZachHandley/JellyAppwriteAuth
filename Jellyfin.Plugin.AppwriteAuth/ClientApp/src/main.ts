@@ -29,25 +29,7 @@ export function unmountApp(): void {
   }
 }
 
-// Auto-mount when loaded in Jellyfin (for Custom Tabs or direct injection)
-if (typeof window !== 'undefined') {
-  // Wait for DOM to be ready
-  const initApp = () => {
-    const target = document.querySelector('#appwrite-auth-root');
-    if (target) {
-      mountApp('#appwrite-auth-root');
-    }
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-  } else {
-    // DOM already loaded
-    initApp();
-  }
-}
-
-// Expose to window for manual mounting if needed
+// Expose to window for manual mounting (called by data-controller wrapper)
 declare global {
   interface Window {
     AppwriteAuthUI?: {

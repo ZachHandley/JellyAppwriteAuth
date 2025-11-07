@@ -52,7 +52,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = "appwriteauthjs",
-                EmbeddedResourcePath = $"{GetType().Namespace}.wwwroot.appwrite-auth.js"
+                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.js"
+            },
+            new PluginPageInfo
+            {
+                Name = "appwriteauthbundle",
+                EmbeddedResourcePath = $"{GetType().Namespace}.wwwroot.appwrite-auth-bundle.js"
             }
         ];
     }

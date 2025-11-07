@@ -21,7 +21,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/main.ts'),
       name: 'AppwriteAuthUI',
-      fileName: () => 'appwrite-auth.js',
+      fileName: () => 'appwrite-auth-bundle.js',
       formats: ['umd'],
     },
     outDir: '../wwwroot',
