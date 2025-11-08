@@ -42,15 +42,22 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <inheritdoc />
     public IEnumerable<PluginPageInfo> GetPages()
     {
-        return
-        [
+        var resourcePath = $"{GetType().Namespace}.Configuration.configPage.html";
+
+        // Log to verify this method is being called
+        Console.WriteLine($"[AppwriteAuth] GetPages() called");
+        Console.WriteLine($"[AppwriteAuth] Resource path: {resourcePath}");
+        Console.WriteLine($"[AppwriteAuth] Plugin name: {this.Name}");
+
+        return new[]
+        {
             new PluginPageInfo
             {
-                Name = Name,
+                Name = this.Name,
                 DisplayName = "Appwrite Auth",
-                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
+                EmbeddedResourcePath = resourcePath,
                 EnableInMainMenu = true
             }
-        ];
+        };
     }
 }
