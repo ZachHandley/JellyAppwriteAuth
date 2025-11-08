@@ -1,0 +1,12 @@
+[
+  {
+    "category": "Authentication",
+    "guid": "1f51419e-8bc3-4fb6-868e-6e8a094d9707",
+    "name": "AppwriteAuth",
+    "description": "Appwrite-backed login and invite/reset for Jellyfin.",
+    "owner": "ZachHandley",
+    "overview": "Keeps Jellyfin URLs; authenticates via Appwrite; admin invites/reset via Messaging.",
+    "versions": [{"checksum":"534dd706c150e2da9bb885541f794c72","changelog":"Release 0.3.4.0","targetAbi":"10.11.0.0","sourceUrl":"https://github.com/ZachHandley/JellyAppwriteAuth/releases/download/v0.3.4/AppwriteAuth-10.11.0.0-0.3.4.0.zip","timestamp":"2025-11-08T07:57:20Z","version":"0.3.4.0"}]
+  }
+]
+
